@@ -1,0 +1,8 @@
+sentences/data
+sentences/images
+images
+.DS_Store
+__pycache__
+dist
+ssakg.egg-info
+build
