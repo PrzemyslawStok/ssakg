@@ -35,6 +35,21 @@ Examples of the use of the program:
 [Reading sequences](examples/ssakg_reading.ipynb)  
 [SSAKG memory](examples/ssakg_tests.ipynb)  
 
+
+## Cite
+If you use SSAKG in scientific publication, we would appreciate citation of the following paper:
+```bibtex
+@misc{stoklosa2024ssakg,
+      title={Associative Knowledge Graphs for Efficient Sequence Storage and Retrieval}, 
+      author={Przemysław Stokłosa and Janusz A. Starzyk and Paweł Raif and Adrian Horzyk and Marcin Kowalik},
+      year={2024},
+      eprint={2411.14480},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2411.14480}, 
+}
+```
+
 ## License
 
 [Apache 2.0](LICENSE)
