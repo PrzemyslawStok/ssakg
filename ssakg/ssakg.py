@@ -18,10 +18,11 @@ from ssakg.ordering_algorithms import OrderingAlgorithm, WeightedEdgesNodeOrderi
 
 
 class SSAKG(ANAKG):
-    def __init__(self, number_of_symbols: int = 10, sequence_length: int = 5, dtype=np.int16, graphs_to_drawing=False,
+    def __init__(self, number_of_symbols: int = 10, sequence_length: int = 5, dtype=np.uint16, graphs_to_drawing=False,
                  remove_diagonals=True, weighted_edges=True):
         super().__init__(number_of_symbols, sequence_length, dtype, graphs_to_drawing, remove_diagonals,
                          weighted_edges)
+
         self.new_sequences_added = False
         self.symmetric_array_mask = self.eval_symmetric_array()
 
@@ -44,7 +45,8 @@ class SSAKG(ANAKG):
             translated_context = context
             unique_context = np.unique(context)
             if len(unique_context) != len(context):
-                warnings.warn("List of symbols contains duplicate elements. Please use underscored symbols instead e.g. \"5_2\".")
+                warnings.warn(
+                    "List of symbols contains duplicate elements. Please use underscored symbols instead e.g. \"5_2\".")
                 return None, None
         else:
             translated_context = self.translate_context(context)

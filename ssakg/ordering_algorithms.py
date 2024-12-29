@@ -200,3 +200,38 @@ class WeightedEdgesNodeOrderingAlgorithm(OrderingAlgorithm):
 
     def __str__(self):
         return "Weighted Edges Ordering"
+
+
+class BitsNodeOrderingAlgorithm(OrderingAlgorithm):
+    def _ordering_function(self, array: np.ndarray, max_index: int):
+        indices_with_no_zeros = OrderingAlgorithm.find_indexes_with_min_zeros_count(array)
+
+        if len(indices_with_no_zeros) == 0:
+            return np.array([])
+
+        bit_no = max_index - len(array)
+        correct_number = 2 ** (bit_no - 1)
+
+        max_index_array = indices_with_no_zeros
+
+        if len(indices_with_no_zeros) > 1:
+            max_correct_numbers = 0
+            current_number_list = []
+
+            for index in indices_with_no_zeros:
+                current_correct_numbers = len(np.where(array[index] == correct_number)[0])
+
+                if current_correct_numbers == max_correct_numbers:
+                    current_number_list.append(index)
+
+                if current_correct_numbers > max_correct_numbers:
+                    current_number_list = [index]
+
+                    max_correct_numbers = current_correct_numbers
+
+            max_index_array = np.array(current_number_list).astype(int)
+
+        return max_index_array
+
+    def __str__(self):
+        return "Bits Node Ordering"

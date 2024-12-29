@@ -26,9 +26,11 @@ from ssakg.sequence_translator import SequenceTranslator
 
 from tabulate import tabulate
 
+from ssakg.subgraph_patterns import SubgraphPatterns
+
 
 class ANAKG:
-    def __init__(self, graph_dim: int = 10, subgraph_dim: int = 5, dtype=np.int16, graphs_to_drawing=False,
+    def __init__(self, graph_dim: int = 10, subgraph_dim: int = 5, dtype=np.uint16, graphs_to_drawing=False,
                  remove_diagonals=True, weighted_edges=True):
 
         # The parameter graphs_to_drawing is only for draw colorfully graph to examples.
@@ -38,47 +40,20 @@ class ANAKG:
         self.subgraph_dim = subgraph_dim
         self.dtype = dtype
 
-        self.sequence_translator = SequenceTranslator(sequence_matrix_dim=graph_dim, dtype=self.dtype)
+        self.sequence_translator = SequenceTranslator(no_unique_symbols=self.graph_dim,
+                                                      sequence_length=self.subgraph_dim,
+                                                      dtype=self.dtype)
 
-        self.subgraph_pattern = self.create_upper_triangular(self.graph_dim, remove_diagonals=remove_diagonals,
-                                                                     weighted_edges=weighted_edges, dtype=self.dtype)
+        self.subgraph_pattern = SubgraphPatterns.create_upper_triangular(self.subgraph_dim,
+                                                                         remove_diagonals=remove_diagonals,
+                                                                         weighted_edges=weighted_edges,
+                                                                         dtype=self.dtype)
 
         self.graph = self.crate_graph()
         self.sequences = []
 
         self.graphs_to_drawing = graphs_to_drawing
         self.graph_matrices = []
-
-    @staticmethod
-    def create_upper_triangular(dim: int, remove_diagonals=False, weighted_edges=True, dtype=np.int16) -> np.array:
-
-        array = np.ones([dim, dim], dtype=dtype)
-
-        if weighted_edges:
-            mul = np.arange(1, dim + 1, dtype=dtype)
-        else:
-            mul = np.ones(dim, dtype=dtype)
-
-        upper_triangular_matrix = (np.tril(array) * mul).transpose()
-
-        if remove_diagonals:
-            upper_triangular_matrix = upper_triangular_matrix - np.eye(dim, dtype=dtype) * mul
-
-        return upper_triangular_matrix
-
-    @staticmethod
-    def create_square(dim: int, remove_diagonals=False, weighted_edges=False, dtype=np.int16) -> np.array:
-        if weighted_edges:
-            mul = np.arange(1, dim + 1, dtype=dtype)
-        else:
-            mul = np.ones(dim, dtype=dtype)
-
-        square_matrix = (np.ones([dim, dim], dtype=dtype) * mul).transpose()
-
-        if remove_diagonals:
-            square_matrix = square_matrix - np.eye(dim, dtype=dtype) * mul
-
-        return square_matrix
 
     def set_subgraph_pattern(self, subgraph_pattern: np.array):
         self.subgraph_pattern = subgraph_pattern
@@ -113,14 +88,27 @@ class ANAKG:
         for i in range(len(self.graph_matrices)):
             self.graph_matrices[i] = np.pad(self.graph_matrices[i], (0, dim_to_add), 'constant')
 
-    def sequence_to_subgraph(self, sequence: np.ndarray) -> np.ndarray:
-        temp_graph = np.zeros(self.graph.shape, dtype=self.dtype)
+    def sequence_to_subgraph(self, sequence: np.ndarray, use_temp_graph=True) -> np.ndarray:
+        temp_graph = None
+        if use_temp_graph:
+            temp_graph = np.zeros(self.graph.shape, dtype=self.dtype)
 
         for i in range(self.subgraph_dim):
             for j in range(self.subgraph_dim):
-                temp_graph[sequence[i], sequence[j]] = self.subgraph_pattern[i, j]
+                if use_temp_graph:
+                    temp_graph[sequence[i], sequence[j]] = self.subgraph_pattern[i, j]
+                else:
+                    self.graph[sequence[i], sequence[j]] += self.subgraph_pattern[i, j]
 
         return temp_graph
+
+    def reserve_symbol_names(self, sequences: np.ndarray) -> int:
+        total_dims_to_add = 0
+        for sequence in sequences:
+            _, dims_to_add = self.sequence_translator.translate_sequence(sequence)
+            total_dims_to_add += dims_to_add
+
+        return total_dims_to_add
 
     def insert_sequence(self, sequence: np.ndarray) -> np.ndarray | None:
         if len(sequence) != self.subgraph_dim:
@@ -133,12 +121,13 @@ class ANAKG:
             self.add_dim_to_graph(dims_to_add)
 
         self.sequences.append(new_sequence)
-        temp_graph = self.sequence_to_subgraph(new_sequence)
 
-        if self.graphs_to_drawing:
+        if not self.graphs_to_drawing:
+            self.sequence_to_subgraph(new_sequence, use_temp_graph=False)
+        else:
+            temp_graph = self.sequence_to_subgraph(new_sequence, use_temp_graph=True)
             self.graph_matrices.append(temp_graph)
-
-        self.graph = self.graph + temp_graph
+            self.graph = self.graph + temp_graph
 
         return new_sequence
 
@@ -146,6 +135,10 @@ class ANAKG:
         if np.ndim(sequences) == 1:
             return self.insert_sequence(sequences)
         else:
+            dims_to_add = self.reserve_symbol_names(sequences)
+            if dims_to_add > 0:
+                self.add_dim_to_graph(dims_to_add)
+
             for sequence in sequences:
                 self.insert_sequence(sequence)
 
@@ -244,10 +237,26 @@ class ANAKG:
     def clear(self):
         self.graph = self.crate_graph()
         self.sequences = []
-        self.sequence_translator = SequenceTranslator(sequence_matrix_dim=self.graph_dim, dtype=self.dtype)
+        self.sequence_translator = SequenceTranslator(no_unique_symbols=self.graph_dim,
+                                                      sequence_length=self.subgraph_dim, dtype=self.dtype)
         self.graph_matrices = []
 
-    def draw_density(self, title=None, x_label=None, y_label=None, circle_size: int = 2):
+    @staticmethod
+    def rebin_dataframe(dataframe: pd.DataFrame, n_bins: int = 50, n_hue_bins=None) -> pd.DataFrame:
+        hist_2d, _, _ = np.histogram2d(dataframe['x'], dataframe['y'], weights=dataframe['z'], bins=n_bins)
+        hue_values = hist_2d.T.flatten()
+
+        x, y = np.meshgrid(np.arange(n_bins), np.arange(n_bins))
+        no_zeros_elements = hue_values != 0
+
+        if n_hue_bins:
+            hue_bins = np.linspace(np.min(hue_values), np.max(hue_values), n_hue_bins)
+            hue_values = np.digitize(hue_values, hue_bins)
+
+        return pd.DataFrame({'x': x.flatten()[no_zeros_elements], 'y': y.flatten()[no_zeros_elements],
+                             'z': hue_values[no_zeros_elements]})
+
+    def draw_density(self, title=None, x_label=None, y_label=None, circle_size: int = 2, bins="auto"):
         dim = self.graph_dim
 
         graph_1d = self.graph.reshape(dim * dim)
@@ -259,10 +268,16 @@ class ANAKG:
 
         dataframe = pd.DataFrame({"x": x, "y": y, "z": non_zeros_values})
 
+        if bins == "auto":
+            if dim > 1000:
+                dataframe = self.rebin_dataframe(dataframe, n_bins=500, n_hue_bins=20)
+        elif type(bins)==int:
+            dataframe = self.rebin_dataframe(dataframe, n_bins=int(bins), n_hue_bins=20)
+
         palette = sns.color_palette("dark:#5A9_r", as_cmap=True)
         joint_grid = sns.JointGrid(data=dataframe, x="x", y="y", hue="z", palette=palette)
         joint_grid.plot_joint(sns.scatterplot, s=circle_size)
-        joint_grid.plot_marginals(sns.histplot, kde=False, bins=100)
+        joint_grid.plot_marginals(sns.histplot, bins=min(int(dim / 2), 100))
         joint_grid.ax_joint.legend().remove()
 
         if title is not None:

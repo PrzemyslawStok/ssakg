@@ -5,7 +5,7 @@ It can memorize sequences and then read them using a context.
 The context contains random sequence elements. The elements of the context are not ordered.
 ## Requirements
 
-- **Minimum Python Version:** 3.10
+- **Python Version:** 3.10-3.12
 ## Installation
 
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install ssakg.
@@ -34,6 +34,8 @@ Examples of the use of the program:
 [Basics](https://github.com/PrzemyslawStok/ssakg/blob/main/examples/ssakg_basic.ipynb)\
 [Reading sequences](https://github.com/PrzemyslawStok/ssakg/blob/main/examples/ssakg_reading.ipynb)  
 [SSAKG memory](https://github.com/PrzemyslawStok/ssakg/blob/main/examples/ssakg_tests.ipynb)  
+
+[miRNA example](https://github.com/PrzemyslawStok/ssakg/blob/main/microrna/mirna_example.ipynb)
 
 ## Requirements
 
