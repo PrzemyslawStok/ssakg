@@ -17,15 +17,15 @@ import warnings
 
 
 class SequenceTranslator:
-    def __init__(self, sequence_matrix_dim: int, dtype=np.int16):
-        self.base_sequence_length = sequence_matrix_dim
-        self.sequence_matrix_dim = sequence_matrix_dim
+    def __init__(self, no_unique_symbols: int, sequence_length: int, dtype=np.int16):
+        self.base_sequence_length = sequence_length
+        self.no_unique_symbols = no_unique_symbols
         self.dtype = dtype
-        self.sequence_symbols_dictionary = np.zeros((self.sequence_matrix_dim, self.sequence_matrix_dim),
+        self.sequence_symbols_dictionary = np.zeros((self.no_unique_symbols, self.base_sequence_length),
                                                     dtype=self.dtype)
         self.sequence_tuples_dictionary = np.zeros((0, 2), dtype=self.dtype)
 
-        self.sequence_symbols_counter = np.zeros([sequence_matrix_dim], dtype=self.dtype)
+        self.sequence_symbols_counter = np.zeros([self.no_unique_symbols], dtype=self.dtype)
         self.max_sequence = self.__max_sequence_number()
         self.multiple_symbol_pattern = re.compile(r"^\s*(\d+)_(\d+)\s*$")
 
@@ -38,18 +38,19 @@ class SequenceTranslator:
             return symbol_tuple[0]
         else:
             address_value = self.sequence_symbols_dictionary.item(symbol_tuple)
-            return address_value + self.base_sequence_length - 1
+            return address_value + self.no_unique_symbols
 
     def __translate_sequence_tuples(self, sequence_tuple: np.ndarray) -> np.ndarray:
         # This function translates sequences with repeated elements into sequences with unique elements.
 
         new_sequence = np.zeros(len(sequence_tuple), dtype=self.dtype)
         for index, enumerated_sequence_tuple in enumerate(sequence_tuple):
-            address_value = self.sequence_symbols_dictionary.item(tuple(enumerated_sequence_tuple))
+            sequence_address = (enumerated_sequence_tuple[0], enumerated_sequence_tuple[1] - 1)
+            address_value = self.sequence_symbols_dictionary.item(sequence_address)
             if address_value == 0:
                 new_sequence[index] = enumerated_sequence_tuple[0]
             else:
-                new_sequence[index] = address_value + self.base_sequence_length - 1
+                new_sequence[index] = address_value + self.no_unique_symbols - 1
 
         return new_sequence
 
@@ -72,13 +73,13 @@ class SequenceTranslator:
 
         for enumerated_sequence_item in sequence_tuples:
             if enumerated_sequence_item[1] > 1:
-                sequence_address = tuple(enumerated_sequence_item)
+                sequence_address = (enumerated_sequence_item[0], enumerated_sequence_item[1] - 1)
                 if self.sequence_symbols_dictionary.item(sequence_address) == 0:
                     if add_to_dictionary:
                         # The sequence contains doubled elements, not exists in sequences dictionary.
                         # This section adds doubled elements to the dictionary.
                         self.max_sequence += 1
-                        self.sequence_symbols_dictionary[sequence_address] =  self.max_sequence
+                        self.sequence_symbols_dictionary[sequence_address] = self.max_sequence
                         self.sequence_tuples_dictionary = np.append(self.sequence_tuples_dictionary,
                                                                     np.array([sequence_address]), axis=0)
                         rows_to_add += 1
@@ -107,7 +108,7 @@ class SequenceTranslator:
         return current_enumerated_sequence
 
     def __check_symbol_value_in_range(self, symbol: int) -> bool:
-        if symbol > self.sequence_matrix_dim or symbol < 0:
+        if symbol > self.no_unique_symbols or symbol < 0:
             return False
         else:
             return True
@@ -138,19 +139,3 @@ class SequenceTranslator:
 
     def __str__(self):
         return str(self.sequence_symbols_dictionary)
-
-
-if __name__ == "__main__":
-    sequence_translator = SequenceTranslator(11)
-
-    print(sequence_translator.translate_sequence(np.array([3, 4, 3, 10])))
-    print(sequence_translator.translate_sequence(np.array([1, 4, 1, 4])))
-    print(sequence_translator.translate_sequence(np.array([5, 5, 0, 5])))
-    print(sequence_translator.translate_sequence(np.array([2, 4, 1, 4])))
-    print(sequence_translator)
-
-    unique_sequence, _ = sequence_translator.translate_sequence(np.array([5, 5, 5, 5]), add_to_dictionary=True)
-    print(unique_sequence)
-
-    enumerated_sequence = sequence_translator.decode_sentence(unique_sequence)
-    print(enumerated_sequence)

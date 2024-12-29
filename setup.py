@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '0.0.1'
+VERSION = '0.1.1'
 DESCRIPTION = 'Sequential Structural Associative Knowledge Graph (ssakg)'
 LONG_DESCRIPTION = open('README_PYPI.md').read()
 
@@ -26,6 +26,6 @@ setup(
         "Operating System :: OS Independent",
     ],
     keywords=["semantic memory", "structural graphs", "graph density", "sequence storage", "sequence retrieval",
-              "context based memory", "graph based memory"],
-    python_requires='>=3.10',
+              "context based memory", "graph based memory", "mirna sequences"],
+    python_requires='>=3.10,<=3.12',
 )

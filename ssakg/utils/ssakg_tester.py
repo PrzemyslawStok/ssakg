@@ -103,7 +103,7 @@ class SSAKG_Tester:
             warnings.warn("Context is longer than sequence length, unable to make test")
 
         if show_progress:
-            bar = ProgBar(len(self.sequences), stream=sys.stdout, title="ssakg test progress")
+            bar = ProgBar(len(self.sequences), stream=sys.stdout, title="ssakg test progress", bar_char='█')
         else:
             bar = None
 
@@ -127,34 +127,45 @@ class SSAKG_Tester:
             if bar is not None:
                 bar.update()
 
-    def plot_agreement_histogram(self, draw_text: bool = True):
-        self.title = f"\n Comparison of algorithms \n Sequence length {self.sequence_length}, context length {self.context_length}"
-
-        word_number = []
+    def create_agreements_dataframe(self) -> pd.DataFrame:
+        correctly_reproduced_elements = []
         correct_no = []
         algorithms_name = []
 
         for algorithm_name, values_set in self.algorithms_test.items():
             for i, value in enumerate(values_set[0]):
-                word_number.append(i)
+                correctly_reproduced_elements.append(i)
                 correct_no.append(value)
                 algorithms_name.append(algorithm_name)
 
-        dataframe = pd.DataFrame({"word_number": word_number, "correct_no": correct_no, "algorithm": algorithms_name})
+        dataframe = pd.DataFrame(
+            {"Correctly_reproduced_elements": correctly_reproduced_elements, "Correct_no": correct_no,
+             "algorithm": algorithms_name})
+
+        return dataframe
+
+    def plot_agreement_histogram(self, draw_text: bool = True):
+        self.title = f"\n Comparison of algorithms \n Sequence length {self.sequence_length}, context length {self.context_length}"
+
+        dataframe = self.create_agreements_dataframe()
 
         fig, ax = plot.subplots()
 
-        bar_plot = sns.barplot(dataframe, x="word_number", y="correct_no", ax=ax, hue="algorithm", legend=True,
+        bar_plot = sns.barplot(dataframe, x="Correctly_reproduced_elements", y="Correct_no", ax=ax, hue="algorithm",
+                               legend=True,
                                palette="bright", width=1)
+
         bar_plot.legend().set_title("")
 
         plot.grid()
 
         if draw_text:
-            plot.title(
-                self.title)
-        plot.xlabel(self.x_label)
-        plot.ylabel(self.y_label)
+            plot.title(self.title)
+            plot.xlabel(self.x_label)
+            plot.ylabel(self.y_label)
+        else:
+            plot.xlabel("")
+            plot.ylabel("")
 
         plot.show()
 
