@@ -40,9 +40,17 @@ class ANAKG:
         self.subgraph_dim = subgraph_dim
         self.dtype = dtype
 
+        if subgraph_dim <= 16:
+            self.translator_dtype = np.uint16
+        else:
+            self.translator_dtype = np.uint32
+
+        if graph_dim > np.iinfo(np.uint16).max:
+            self.translator_dtype = np.uint32
+
         self.sequence_translator = SequenceTranslator(no_unique_symbols=self.graph_dim,
                                                       sequence_length=self.subgraph_dim,
-                                                      dtype=self.dtype)
+                                                      dtype=self.translator_dtype)
 
         self.subgraph_pattern = SubgraphPatterns.create_upper_triangular(self.subgraph_dim,
                                                                          remove_diagonals=remove_diagonals,

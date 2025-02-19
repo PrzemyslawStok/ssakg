@@ -2,7 +2,7 @@ import numpy as np
 
 
 class SequenceGenerator:
-    def __init__(self, sequence_length, sequence_min: int, sequence_max: int, dtype=np.uint16, seed=None):
+    def __init__(self, sequence_length, sequence_min: int, sequence_max: int, dtype=np.uint32, seed=None):
         self.dtype = dtype
 
         self.sequence_length = sequence_length

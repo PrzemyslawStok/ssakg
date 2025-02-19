@@ -16,6 +16,7 @@ import warnings
 from ssakg.anakg import ANAKG
 from ssakg.ordering_algorithms import OrderingAlgorithm, WeightedEdgesNodeOrderingAlgorithm
 
+import ssakg_extension as ssakg_ext
 
 class SSAKG(ANAKG):
     def __init__(self, number_of_symbols: int = 10, sequence_length: int = 5, dtype=np.uint16, graphs_to_drawing=False,
@@ -24,22 +25,9 @@ class SSAKG(ANAKG):
                          weighted_edges)
 
         self.new_sequences_added = False
-        self.symmetric_array_mask = self.eval_symmetric_array()
-
-    def set_array(self, graph_array: np.ndarray):
-        self.symmetric_array_mask = graph_array + np.transpose(graph_array)
-
-    def eval_symmetric_array(self):
-        self.symmetric_array_mask = self.get_graph() + np.transpose(self.get_graph())
-        self.symmetric_array_mask = self.symmetric_array_mask + np.eye(self.symmetric_array_mask.shape[0])
-        self.symmetric_array_mask = np.where(self.symmetric_array_mask == 0, 0, 1)
-        self.new_sequences_added = False
-        return self.symmetric_array_mask
 
     def get_unsorted_elements(self, context: np.ndarray, context_is_translated=False) -> (
             np.ndarray, np.ndarray):
-        if self.new_sequences_added:
-            self.eval_symmetric_array()
 
         if context_is_translated:
             translated_context = context
@@ -54,15 +42,8 @@ class SSAKG(ANAKG):
         if translated_context is None:
             return None, None
 
-        context_array = self.symmetric_array_mask[translated_context]
+        return ssakg_ext.get_unsorted_elements(self.graph, translated_context.astype(dtype=np.uint32)), []
 
-        if len(context_array) == 0:
-            return None
-
-        row_prod = np.prod(context_array, axis=0)
-        non_zeros = np.where(row_prod != 0)[0]
-
-        return non_zeros, row_prod
 
     def __get_sequence(self, context: np.ndarray, decode_sequence=True, context_is_translated=False,
                        ordering_alg=WeightedEdgesNodeOrderingAlgorithm()) -> np.ndarray | list:
