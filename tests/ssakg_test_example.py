@@ -14,6 +14,7 @@ def create_ssakg_test(number_of_symbols=1000, number_of_sequences=1000, sequence
 
     ssakg_tester.plot_agreement_histogram(draw_text=True)
     print(ssakg_tester)
+    print(ssakg)
 
 if __name__ == "__main__":
-    create_ssakg_test(number_of_symbols=10_000, number_of_sequences=1000, sequence_length=15, context_length=7)
+    create_ssakg_test(number_of_symbols=100_000, number_of_sequences=1000, sequence_length=15, context_length=7)

@@ -165,7 +165,7 @@ class ANAKG:
         return temp_graph
 
     def __str__(self):
-        graph_size = self.graph.nbytes
+        graph_size = self.graph.nbytes / (1024 ** 3)
         sequences_no = len(self.graph_matrices)
         sequences_size = 0
         for sequence in self.graph_matrices:
@@ -173,7 +173,7 @@ class ANAKG:
 
         density = self.density()
 
-        return (f"graph_size: {graph_size} B\ngraph density: {density:.2f}\nstored sequences: "
+        return (f"graph_size: {graph_size:.3f} GB\ngraph density: {density:.2f}\nstored sequences: "
                 f"{sequences_no}\nstored sequences size: {sequences_size}B\n")
 
     def get_subgraph(self):
