@@ -16,6 +16,7 @@ import pandas as pd
 import seaborn as sns
 import warnings
 import sys
+import time
 
 from pyprind import ProgBar
 
@@ -36,6 +37,7 @@ class SSAKG_Tester:
         self.y_label = "Number of sequences"
         self.algorithms_list = algorithms_list
         self.unsorted_elements_test = [0, 0]
+        self.elapsed_time = 0
         if algorithms_list is None:
             self.algorithms_list = [SimpleSort(), NodeOrderingAlgorithm(),
                                     EnhancedNodeOrderingAlgorithm(),
@@ -97,6 +99,8 @@ class SSAKG_Tester:
 
     def make_test(self, context_length, show_progress=False):
         self.clear()
+
+        start_time = time.time()
         self.context_length = context_length
 
         if context_length > self.sequence_length:
@@ -126,6 +130,8 @@ class SSAKG_Tester:
 
             if bar is not None:
                 bar.update()
+
+        self.elapsed_time = time.time() - start_time
 
     def create_agreements_dataframe(self) -> pd.DataFrame:
         correctly_reproduced_elements = []
@@ -211,6 +217,7 @@ class SSAKG_Tester:
         algorithm_info += f"ssakg dimension: {len(graph_matrix)}\n"
         algorithm_info += f"sequence length: {self.sequence_length}\n"
         algorithm_info += f"context length: {self.context_length}\n"
+        algorithm_info += f"elapsed time:{self.elapsed_time: .2f}s\n"
         unsorted_percentage = (self.unsorted_elements_test[0] /
                                (self.unsorted_elements_test[0] + self.unsorted_elements_test[1]) * 100)
         algorithm_info += f"unordered sequences restored: {unsorted_percentage:.2f}%\n"
