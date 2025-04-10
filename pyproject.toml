@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=61.0,<70", "wheel", "numpy~=2.2.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ssakg"
+version = "0.1.8"
+description = "Sequential Structural Associative Knowledge Graph (ssakg)"
+readme = "README_PYPI.md"
+requires-python = ">=3.10,<=3.12.7"
+license = { text = "Apache 2.0" }
+authors = [
+    { name = "Przemysław Stokłosa", email = "przemyslaw.stoklosa@gmail.com" }
+]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent"
+]
+dependencies = [
+    "numpy~=2.2.2",
+    "networkx~=3.2.1",
+    "matplotlib~=3.8.2",
+    "pandas~=2.2.0",
+    "tabulate~=0.9.0",
+    "PyPrind~=2.11.3",
+    "seaborn~=0.13.2"
+]
+keywords = [
+    "semantic memory",
+    "structural graphs",
+    "graph density",
+    "sequence storage",
+    "sequence retrieval",
+    "context based memory",
+    "graph based memory",
+    "mirna sequences"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/PrzemyslawStok/ssakg"
+
+[tool.setuptools]
+packages = { find = { } }
+include-package-data = true
+
+[tool.setuptools.package-data]
+"*" = ["*.c"]
+
+[project.optional-dependencies]
+dev = ["numpy~=2.2.2"]  # setup_requires equivalent
