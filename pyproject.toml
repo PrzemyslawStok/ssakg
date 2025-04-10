@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ssakg"
-version = "0.1.8"
+version = "0.2.0"
 description = "Sequential Structural Associative Knowledge Graph (ssakg)"
 readme = "README_PYPI.md"
 requires-python = ">=3.10,<=3.12.7"
