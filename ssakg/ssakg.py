@@ -18,6 +18,7 @@ from ssakg.ordering_algorithms import OrderingAlgorithm, WeightedEdgesNodeOrderi
 
 import ssakg_extension as ssakg_ext
 
+
 class SSAKG(ANAKG):
     def __init__(self, number_of_symbols: int = 10, sequence_length: int = 5, dtype=np.uint16, graphs_to_drawing=False,
                  remove_diagonals=True, weighted_edges=True):
@@ -44,15 +45,18 @@ class SSAKG(ANAKG):
 
         return ssakg_ext.get_unsorted_elements(self.graph, translated_context.astype(dtype=np.uint32)), []
 
-
     def __get_sequence(self, context: np.ndarray, decode_sequence=True, context_is_translated=False,
                        ordering_alg=WeightedEdgesNodeOrderingAlgorithm()) -> np.ndarray | list:
 
         unsorted_elements, _ = self.get_unsorted_elements(context, context_is_translated)
         if unsorted_elements is None:
             return None
+
         sorted_elements, _ = self.order_sequence(unsorted_elements, ordering_alg=ordering_alg,
                                                  use_only_first_path=True)
+
+        if sorted_elements is None:
+            sorted_elements = unsorted_elements
 
         if decode_sequence:
             return self.decode_sequence(sorted_elements)
