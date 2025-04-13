@@ -53,6 +53,8 @@ class SSAKG(ANAKG):
             return None
         sorted_elements, _ = self.order_sequence(unsorted_elements, ordering_alg=ordering_alg,
                                                  use_only_first_path=True)
+        if sorted_elements is None:
+            sorted_elements = unsorted_elements
 
         if decode_sequence:
             return self.decode_sequence(sorted_elements)
