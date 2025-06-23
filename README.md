@@ -41,14 +41,16 @@ Examples of the use of the program:
 ## Cite
 If you use SSAKG in scientific publication, we would appreciate citation of the following paper:
 ```bibtex
-@misc{stokłosa2024associativeknowledgegraphsefficient,
-      title={Associative Knowledge Graphs for Efficient Sequence Storage and Retrieval}, 
-      author={Przemysław Stokłosa and Janusz A. Starzyk and Paweł Raif and Adrian Horzyk and Marcin Kowalik},
-      year={2024},
-      eprint={2411.14480},
-      archivePrefix={arXiv},
-      primaryClass={cs.AI},
-      url={https://arxiv.org/abs/2411.14480}, 
+@article{STOKLOSA2025108865,
+    title = {Associative knowledge graphs for efficient sequence storage and retrieval},
+    journal = {Computer Methods and Programs in Biomedicine},
+    volume = {269},
+    pages = {108865},
+    year = {2025},
+    issn = {0169-2607},
+    doi = {https://doi.org/10.1016/j.cmpb.2025.108865},
+    url = {https://www.sciencedirect.com/science/article/pii/S0169260725002822},
+    author = {Przemysław Stokłosa and Janusz A. Starzyk and Paweł Raif and Adrian Horzyk and Marcin Kowalik},
 }
 ```
 
