@@ -30,20 +30,34 @@ from ssakg.subgraph_patterns import SubgraphPatterns
 
 
 class ANAKG:
-    def __init__(self, graph_dim: int = 10, subgraph_dim: int = 5, dtype=np.uint16, graphs_to_drawing=False,
-                 remove_diagonals=True, weighted_edges=True):
+    def __init__(self, graph_dim: int = 10, subgraph_dim: int = 5, graphs_to_drawing=False,
+                 remove_diagonals=True, weighted_edges=True, bits_graph=False, dtype=None):
 
         # The parameter graphs_to_drawing is only for draw colorfully graph to examples.
         # Do not use it for other purposes.
 
         self.graph_dim = graph_dim
         self.subgraph_dim = subgraph_dim
-        self.dtype = dtype
+
+        self.bits_graph = bits_graph
 
         if subgraph_dim <= 16:
             self.translator_dtype = np.uint16
         else:
             self.translator_dtype = np.uint32
+
+        if dtype is None:
+            if self.bits_graph:
+                if subgraph_dim <= 16:
+                    self.dtype = np.uint16
+                elif subgraph_dim <= 32:
+                    self.dtype = np.uint32
+                else:
+                    self.dtype = np.uint64
+            else:
+                self.dtype = np.uint16
+        else:
+            self.dtype = dtype
 
         if graph_dim > np.iinfo(np.uint16).max:
             self.translator_dtype = np.uint32
@@ -52,10 +66,14 @@ class ANAKG:
                                                       sequence_length=self.subgraph_dim,
                                                       dtype=self.translator_dtype)
 
-        self.subgraph_pattern = SubgraphPatterns.create_upper_triangular(self.subgraph_dim,
-                                                                         remove_diagonals=remove_diagonals,
-                                                                         weighted_edges=weighted_edges,
-                                                                         dtype=self.dtype)
+        if not bits_graph:
+            self.subgraph_pattern = SubgraphPatterns.create_upper_triangular(self.subgraph_dim,
+                                                                             remove_diagonals=remove_diagonals,
+                                                                             weighted_edges=weighted_edges,
+                                                                             dtype=self.dtype)
+        else:
+            self.subgraph_pattern = SubgraphPatterns.bits_square(self.subgraph_dim,
+                                                                 dtype=self.dtype)
 
         self.graph = self.crate_graph()
         self.sequences = []
@@ -105,8 +123,17 @@ class ANAKG:
             for j in range(self.subgraph_dim):
                 if use_temp_graph:
                     temp_graph[sequence[i], sequence[j]] = self.subgraph_pattern[i, j]
+                    if self.bits_graph:
+                        self.graph = np.bitwise_or(self.graph, temp_graph)
+                    else:
+                        self.graph = self.graph + temp_graph
+
                 else:
-                    self.graph[sequence[i], sequence[j]] += self.subgraph_pattern[i, j]
+                    if self.bits_graph:
+                        self.graph[sequence[i], sequence[j]] = np.bitwise_or(self.graph[sequence[i], sequence[j]],
+                                                                             self.subgraph_pattern[i, j])
+                    else:
+                        self.graph[sequence[i], sequence[j]] += self.subgraph_pattern[i, j]
 
         return temp_graph
 
@@ -279,7 +306,7 @@ class ANAKG:
         if bins == "auto":
             if dim > 1000:
                 dataframe = self.rebin_dataframe(dataframe, n_bins=500, n_hue_bins=20)
-        elif type(bins)==int:
+        elif type(bins) == int:
             dataframe = self.rebin_dataframe(dataframe, n_bins=int(bins), n_hue_bins=20)
 
         palette = sns.color_palette("dark:#5A9_r", as_cmap=True)

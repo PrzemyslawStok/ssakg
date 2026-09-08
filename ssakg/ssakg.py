@@ -18,13 +18,41 @@ from ssakg.ordering_algorithms import OrderingAlgorithm, WeightedEdgesNodeOrderi
 
 import ssakg_extension as ssakg_ext
 
-class SSAKG(ANAKG):
-    def __init__(self, number_of_symbols: int = 10, sequence_length: int = 5, dtype=np.uint16, graphs_to_drawing=False,
-                 remove_diagonals=True, weighted_edges=True):
-        super().__init__(number_of_symbols, sequence_length, dtype, graphs_to_drawing, remove_diagonals,
-                         weighted_edges)
 
+class SSAKG(ANAKG):
+    def __init__(self, number_of_symbols: int = 10, sequence_length: int = 5, dtype=None, graphs_to_drawing=False,
+                 remove_diagonals=True, weighted_edges=True, bits_graph=False, bits_tests=False):
+        super().__init__(number_of_symbols, sequence_length, graphs_to_drawing, remove_diagonals,
+                         weighted_edges, bits_graph, dtype)
+
+        self.bits_tests = bits_tests
         self.new_sequences_added = False
+
+    def eval_non_zero_elements_loops(self, graph: np.ndarray, context=None) -> np.ndarray:
+        graph_rows_no = len(graph)
+        context_length = len(context)
+
+        context_array = np.zeros((context_length, graph_rows_no), dtype=np.int16)
+        row_prod = np.ones(graph_rows_no, dtype=np.int16)
+        pyton_elements = "["
+        for i in range(graph_rows_no):
+            for j in range(context_length):
+                context_array[j, i] = graph[context[j], i] + graph[i, context[j]]
+
+                if i == context[j]:
+                    context_array[j, i] += 1
+
+                if context_array[j, i] != 0:
+                    pyton_elements += " " + str(context_array[j, i])
+
+                row_prod[i] *= context_array[j, i] != 0
+                if row_prod[i] == 0:
+                    break
+        pyton_elements += " ]"
+        print(f"elements: {pyton_elements}")
+        non_zeros = np.where(row_prod != 0)[0]
+
+        return non_zeros
 
     def get_unsorted_elements(self, context: np.ndarray, context_is_translated=False) -> (
             np.ndarray, np.ndarray):
@@ -42,19 +70,27 @@ class SSAKG(ANAKG):
         if translated_context is None:
             return None, None
 
-        return ssakg_ext.get_unsorted_elements(self.graph, translated_context.astype(dtype=np.uint32)), []
+        if not self.bits_tests:
+            unsorted_elements = ssakg_ext.get_unsorted_elements(self.graph, translated_context.astype(
+                dtype=np.uint32))
+            return unsorted_elements, unsorted_elements
+        else:
+            sorted_sequence, unsorted_sequence = ssakg_ext.get_sorted_elements_bits(self.graph,
+                                                                                    context.astype(np.uintp))
+            # if np.random.randint(0, 100) < 5:
+            #     unsorted_sequence[0] = 0
 
+            return sorted_sequence, unsorted_sequence
 
     def __get_sequence(self, context: np.ndarray, decode_sequence=True, context_is_translated=False,
                        ordering_alg=WeightedEdgesNodeOrderingAlgorithm()) -> np.ndarray | list:
 
         unsorted_elements, _ = self.get_unsorted_elements(context, context_is_translated)
+
         if unsorted_elements is None:
             return None
         sorted_elements, _ = self.order_sequence(unsorted_elements, ordering_alg=ordering_alg,
                                                  use_only_first_path=True)
-        if sorted_elements is None:
-            sorted_elements = unsorted_elements
 
         if decode_sequence:
             return self.decode_sequence(sorted_elements)
@@ -106,7 +142,6 @@ class SSAKG(ANAKG):
             sequence_2 = np.sort(sequence_2)
 
             if not np.array_equal(sequence_1, sequence_2):
-                print("ssakg: different sequences")
                 return False
 
             return True
