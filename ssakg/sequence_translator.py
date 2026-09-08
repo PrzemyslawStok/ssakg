@@ -32,6 +32,9 @@ class SequenceTranslator:
     def __max_sequence_number(self):
         return np.max(self.sequence_symbols_dictionary)
 
+    def get_number_of_symbols(self):
+        return self.no_unique_symbols + self.max_sequence
+
     def __symbol_number_from_tuple(self, symbol_tuple):
         # This function returns encoded number of multiple symbol.
         if symbol_tuple[1] == 1:

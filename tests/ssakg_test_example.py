@@ -58,7 +58,7 @@ def simple_read():
     print(read_sequence)
 
 if __name__ == "__main__":
-    speed_test = False
+    speed_test = True
     similarity_test = False
     simple_read_test = True
     if speed_test:
