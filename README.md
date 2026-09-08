@@ -41,7 +41,7 @@ Examples of the use of the program:
 ## Cite
 If you use SSAKG in scientific publication, we would appreciate citation of the following paper:
 ```bibtex
-@article{STOKLOSA2025108865,
+@article{ssakg_article,
     title = {Associative knowledge graphs for efficient sequence storage and retrieval},
     journal = {Computer Methods and Programs in Biomedicine},
     volume = {269},
@@ -52,6 +52,18 @@ If you use SSAKG in scientific publication, we would appreciate citation of the 
     url = {https://www.sciencedirect.com/science/article/pii/S0169260725002822},
     author = {Przemysław Stokłosa and Janusz A. Starzyk and Paweł Raif and Adrian Horzyk and Marcin Kowalik},
 }
+```
+A comparison of SSAKG with a Hopfield network is presented here:
+```bibtex
+@ARTICLE{ssakg_comparison,
+  author={Starzyk, Janusz A. and Raif, Paweł and Stokłosa, Przemysław and Horzyk, Adrian and Bulanda, Daniel},
+  journal={IEEE Transactions on Network Science and Engineering},
+  title={Scaling Associative Memory: A Sparse Graph Approach versus Modern Hopfield Networks},
+  year={2026},
+  volume={},
+  number={},
+  pages={1-18},
+  doi={10.1109/TNSE.2026.3726352}}
 ```
 
 ## License
