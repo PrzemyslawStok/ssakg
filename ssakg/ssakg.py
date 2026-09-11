@@ -17,16 +17,17 @@ from ssakg.anakg import ANAKG
 from ssakg.ordering_algorithms import OrderingAlgorithm, WeightedEdgesNodeOrderingAlgorithm
 
 import ssakg_extension as ssakg_ext
+# from . import ssakg_extension as ssakg_ext
 
 
 class SSAKG(ANAKG):
     def __init__(self, number_of_symbols: int = 10, sequence_length: int = 5, dtype=None, graphs_to_drawing=False,
-                 remove_diagonals=True, weighted_edges=True, bits_graph=False, bits_tests=False):
+                 remove_diagonals=True, weighted_edges=True, bits_graph=False):
         super().__init__(number_of_symbols, sequence_length, graphs_to_drawing, remove_diagonals,
                          weighted_edges, bits_graph, dtype)
 
-        self.bits_tests = bits_tests
         self.new_sequences_added = False
+        self.bit_based = bits_graph
 
     def eval_non_zero_elements_loops(self, graph: np.ndarray, context=None) -> np.ndarray:
         graph_rows_no = len(graph)
@@ -70,17 +71,17 @@ class SSAKG(ANAKG):
         if translated_context is None:
             return None, None
 
-        if not self.bits_tests:
+        if self.bit_based:
+            # The bit-based algorithm always produces sorted elements (called bits sort).
+            # One can also use unsorted elements to test the external sorting function.
+            sorted_sequence, unsorted_sequence = ssakg_ext.get_sorted_elements_bits(self.graph,
+                                                                                    context.astype(np.uintp))
+            return sorted_sequence, unsorted_sequence
+        else:
+            # The data from published works (up to version ssakg 1.0) can be reproduced using an earlier version of the algorithm.
             unsorted_elements = ssakg_ext.get_unsorted_elements(self.graph, translated_context.astype(
                 dtype=np.uint32))
             return unsorted_elements, unsorted_elements
-        else:
-            sorted_sequence, unsorted_sequence = ssakg_ext.get_sorted_elements_bits(self.graph,
-                                                                                    context.astype(np.uintp))
-            # if np.random.randint(0, 100) < 5:
-            #     unsorted_sequence[0] = 0
-
-            return sorted_sequence, unsorted_sequence
 
     def __get_sequence(self, context: np.ndarray, decode_sequence=True, context_is_translated=False,
                        ordering_alg=WeightedEdgesNodeOrderingAlgorithm()) -> np.ndarray | list:
