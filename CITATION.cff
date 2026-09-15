@@ -6,10 +6,6 @@ title: "SSAKG"
 type: software
 version: "2.0.0"
 
-authors:
-  - family-names: "Stokłosa"
-    given-names: "Przemysław"
-
 url: "https://github.com/PrzemyslawStok/ssakg"
 
 preferred-citation:
