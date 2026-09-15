@@ -11,7 +11,7 @@ The context contains random sequence elements. The elements of the context are n
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install ssakg.
 
 ```bash
-pip install ssakg
+pip install ssakg --pre
 ```
 
 ## Usage
