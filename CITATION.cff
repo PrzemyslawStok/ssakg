@@ -1,18 +1,33 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
-authors:
-- family-names: "Stokłosa"
-  given-names: "Przemysław"
-- family-names: "Starzyk"
-  given-names: "Janusz A."
-- family-names: "Raif"
-  given-names: "Paweł"
-- family-names: "Horzyk"
-  given-names: "Adrian"
-- family-names: "Kowalik"
-  given-names: "Marcin"
+
+message: "If you use SSAKG, please cite the associated publication."
+
 title: "SSAKG"
-version: 0.0.1
-doi: 10.48550/arXiv.2411.14480
-date-released: 2024-11-25
+type: software
+version: "2.0.0"
+
+authors:
+  - family-names: "Stokłosa"
+    given-names: "Przemysław"
+
 url: "https://github.com/PrzemyslawStok/ssakg"
+
+preferred-citation:
+  type: article
+  title: "Associative knowledge graphs for efficient sequence storage and retrieval"
+  authors:
+    - family-names: "Stokłosa"
+      given-names: "Przemysław"
+    - family-names: "Starzyk"
+      given-names: "Janusz A."
+    - family-names: "Raif"
+      given-names: "Paweł"
+    - family-names: "Horzyk"
+      given-names: "Adrian"
+    - family-names: "Kowalik"
+      given-names: "Marcin"
+  journal: "Computer Methods and Programs in Biomedicine"
+  volume: 269
+  year: 2025
+  article-number: "108865"
+  doi: "10.1016/j.cmpb.2025.108865"
