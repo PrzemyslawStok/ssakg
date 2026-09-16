@@ -6,14 +6,14 @@ from tests.SSAKG_Tester_context import SSAKG_Tester_context
 
 def create_ssakg_test(bit_based=False, number_of_symbols=1000, number_of_sequences=1000, sequence_length=15,
                       context_length=7):
-    ssakg = SSAKG(number_of_symbols=number_of_symbols, sequence_length=sequence_length, bits_graph=bit_based)
+    ssakg = SSAKG(number_of_symbols=number_of_symbols, sequence_length=sequence_length, bit_based=bit_based)
     sequence_generator = SequenceGenerator(sequence_length=sequence_length, sequence_min=0,
                                            sequence_max=number_of_symbols)
 
     sequences = sequence_generator.generate_unique_sequences(number_of_sequences, unique_elements=False)
     ssakg.insert(sequences)
 
-    ssakg_tester = SSAKG_Tester(ssakg, sequences, bits_graph=bit_based)
+    ssakg_tester = SSAKG_Tester(ssakg, sequences)
     ssakg_tester.make_test(context_length=context_length, show_progress=True)
 
     ssakg_tester.plot_agreement_histogram(draw_text=True)

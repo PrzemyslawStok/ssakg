@@ -25,8 +25,7 @@ from ssakg.ssakg import SSAKG
 
 
 class SSAKG_Tester:
-    def __init__(self, ssakg: SSAKG, sequences: np.ndarray, algorithms_list: list[OrderingAlgorithm] = None,
-                 bits_graph=False):
+    def __init__(self, ssakg: SSAKG, sequences: np.ndarray, algorithms_list: list[OrderingAlgorithm] = None):
         self.ssakg = ssakg
         self.sequences = sequences
         self.sequence_length = len(sequences[0])
@@ -36,7 +35,8 @@ class SSAKG_Tester:
         self.x_label = "Number of correct elements in sequence"
         self.y_label = "Number of sequences"
         self.algorithms_list = algorithms_list
-        self.bits_graph = bits_graph
+        # SSAKG 2.0 extension has built in sort method (called bits sort)
+        self.bit_based = ssakg.bit_based
         self.unsorted_elements_test = [0, 0]
         self.unsorted_percentage = 0
         if algorithms_list is None:
@@ -53,7 +53,7 @@ class SSAKG_Tester:
     def ordering_test(self, translated_sequence, context_sequence, bits_sorted_sequence=None):
         use_only_first_path = True
 
-        if self.bits_graph:
+        if self.bit_based:
             result, agreement = SSAKG.compare_sorted_sequences(translated_sequence, bits_sorted_sequence)
             # The bit-based algorithm have built-in sort function.
             self.add_values(agreement, "Bits sort")
