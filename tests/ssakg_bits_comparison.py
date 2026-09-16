@@ -22,7 +22,7 @@ def table_symbols_sequences(symbols_list: list[int], number_of_sequences_list: l
     for i, symbols in enumerate(symbols_list):
         for j, no_sequences in enumerate(number_of_sequences_list):
             ssakg = SSAKG(number_of_symbols=symbols, sequence_length=sequence_length)
-            ssakg_bits = SSAKG(number_of_symbols=symbols, sequence_length=sequence_length, bits_graph=True)
+            ssakg_bits = SSAKG(number_of_symbols=symbols, sequence_length=sequence_length, bit_based=True)
 
             sequence_generator = SequenceGenerator(sequence_length=sequence_length, sequence_min=0,
                                                    sequence_max=symbols)
@@ -58,7 +58,7 @@ def table_various_context(no_symbols: int, number_of_sequences_list: list[int], 
 
     for i, no_sequences in enumerate(number_of_sequences_list):
         ssakg = SSAKG(number_of_symbols=no_symbols, sequence_length=sequence_length)
-        ssakg_bits = SSAKG(number_of_symbols=no_symbols, sequence_length=sequence_length, bits_graph=True)
+        ssakg_bits = SSAKG(number_of_symbols=no_symbols, sequence_length=sequence_length, bit_based=True)
 
         sequence_generator = SequenceGenerator(sequence_length=sequence_length, sequence_min=0,
                                                sequence_max=no_symbols)

@@ -22,12 +22,12 @@ import ssakg_extension as ssakg_ext
 
 class SSAKG(ANAKG):
     def __init__(self, number_of_symbols: int = 10, sequence_length: int = 5, dtype=None, graphs_to_drawing=False,
-                 remove_diagonals=True, weighted_edges=True, bits_graph=False):
+                 remove_diagonals=True, weighted_edges=True, bit_based=False):
         super().__init__(number_of_symbols, sequence_length, graphs_to_drawing, remove_diagonals,
-                         weighted_edges, bits_graph, dtype)
+                         weighted_edges, bit_based, dtype)
 
         self.new_sequences_added = False
-        self.bit_based = bits_graph
+        self.bit_based = bit_based
 
     def eval_non_zero_elements_loops(self, graph: np.ndarray, context=None) -> np.ndarray:
         graph_rows_no = len(graph)

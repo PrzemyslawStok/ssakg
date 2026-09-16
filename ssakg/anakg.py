@@ -31,7 +31,7 @@ from ssakg.subgraph_patterns import SubgraphPatterns
 
 class ANAKG:
     def __init__(self, graph_dim: int = 10, subgraph_dim: int = 5, graphs_to_drawing=False,
-                 remove_diagonals=True, weighted_edges=True, bits_graph=False, dtype=None):
+                 remove_diagonals=True, weighted_edges=True, bit_based=False, dtype=None):
 
         # The parameter graphs_to_drawing is only for draw colorfully graph to examples.
         # Do not use it for other purposes.
@@ -39,7 +39,7 @@ class ANAKG:
         self.graph_dim = graph_dim
         self.subgraph_dim = subgraph_dim
 
-        self.bits_graph = bits_graph
+        self.bit_based = bit_based
 
         if subgraph_dim <= 16:
             self.translator_dtype = np.uint16
@@ -47,7 +47,7 @@ class ANAKG:
             self.translator_dtype = np.uint32
 
         if dtype is None:
-            if self.bits_graph:
+            if self.bit_based:
                 if subgraph_dim <= 16:
                     self.dtype = np.uint16
                 elif subgraph_dim <= 32:
@@ -66,7 +66,7 @@ class ANAKG:
                                                       sequence_length=self.subgraph_dim,
                                                       dtype=self.translator_dtype)
 
-        if not bits_graph:
+        if not bit_based:
             self.subgraph_pattern = SubgraphPatterns.create_upper_triangular(self.subgraph_dim,
                                                                              remove_diagonals=remove_diagonals,
                                                                              weighted_edges=weighted_edges,
@@ -123,13 +123,13 @@ class ANAKG:
             for j in range(self.subgraph_dim):
                 if use_temp_graph:
                     temp_graph[sequence[i], sequence[j]] = self.subgraph_pattern[i, j]
-                    if self.bits_graph:
+                    if self.bit_based:
                         self.graph = np.bitwise_or(self.graph, temp_graph)
                     else:
                         self.graph = self.graph + temp_graph
 
                 else:
-                    if self.bits_graph:
+                    if self.bit_based:
                         self.graph[sequence[i], sequence[j]] = np.bitwise_or(self.graph[sequence[i], sequence[j]],
                                                                              self.subgraph_pattern[i, j])
                     else:
