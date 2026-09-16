@@ -34,6 +34,7 @@ class ANAKG:
                  remove_diagonals=True, weighted_edges=True, bit_based=False, dtype=None):
 
         # The parameter graphs_to_drawing is only for draw colorfully graph to examples.
+        # Warning for bit_based is not stable
         # Do not use it for other purposes.
 
         self.graph_dim = graph_dim
