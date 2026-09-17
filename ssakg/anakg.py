@@ -34,7 +34,6 @@ class ANAKG:
                  remove_diagonals=True, weighted_edges=True, bit_based=False, dtype=None):
 
         # The parameter graphs_to_drawing is only for draw colorfully graph to examples.
-        # Warning for bit_based is not stable
         # Do not use it for other purposes.
 
         self.graph_dim = graph_dim
@@ -80,6 +79,8 @@ class ANAKG:
         self.sequences = []
 
         self.graphs_to_drawing = graphs_to_drawing
+
+        # The parameter graph_matrices is only for draw colorfully graph to examples.
         self.graph_matrices = []
 
     def set_subgraph_pattern(self, subgraph_pattern: np.array):
@@ -124,17 +125,18 @@ class ANAKG:
             for j in range(self.subgraph_dim):
                 if use_temp_graph:
                     temp_graph[sequence[i], sequence[j]] = self.subgraph_pattern[i, j]
-                    if self.bit_based:
-                        self.graph = np.bitwise_or(self.graph, temp_graph)
-                    else:
-                        self.graph = self.graph + temp_graph
-
                 else:
                     if self.bit_based:
                         self.graph[sequence[i], sequence[j]] = np.bitwise_or(self.graph[sequence[i], sequence[j]],
                                                                              self.subgraph_pattern[i, j])
                     else:
                         self.graph[sequence[i], sequence[j]] += self.subgraph_pattern[i, j]
+
+        if use_temp_graph:
+            if self.bit_based:
+                self.graph = np.bitwise_or(self.graph, temp_graph)
+            else:
+                self.graph = self.graph + temp_graph
 
         return temp_graph
 
@@ -163,7 +165,6 @@ class ANAKG:
         else:
             temp_graph = self.sequence_to_subgraph(new_sequence, use_temp_graph=True)
             self.graph_matrices.append(temp_graph)
-            self.graph = self.graph + temp_graph
 
         return new_sequence
 

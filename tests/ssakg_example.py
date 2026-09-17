@@ -53,7 +53,7 @@ def crate_ssakg_similarity_test(number_of_symbols=1000, number_of_sequences=1000
 
 
 def simple_read():
-    ssakg = SSAKG(number_of_symbols=20, sequence_length=5, graphs_to_drawing=True)
+    ssakg = SSAKG(number_of_symbols=20, sequence_length=5, graphs_to_drawing=False)
     ssakg.insert(np.array([[5, 1, 3, 4, 7], [1, 2, 11, 8, 5], [5, 1, 11, 2, 15]]))
 
     read_sequence = ssakg.get_sequence([3, 1, 5])
@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     bit_based = True
     if speed_test:
-        create_ssakg_test(bit_based=bit_based, number_of_symbols=1000, number_of_sequences=100, sequence_length=15,
+        create_ssakg_test(bit_based=bit_based, number_of_symbols=1000, number_of_sequences=1000, sequence_length=15,
                           context_length=6)
     if similarity_test:
         crate_ssakg_similarity_test(number_of_symbols=1000, number_of_sequences=100, sequence_length=15,
