@@ -20,7 +20,7 @@ import sys
 from pyprind import ProgBar
 
 from ssakg.ordering_algorithms import SimpleSort, NodeOrderingAlgorithm, EnhancedNodeOrderingAlgorithm, \
-    WeightedEdgesNodeOrderingAlgorithm, OrderingAlgorithm
+    WeightedEdgesNodeOrderingAlgorithm, OrderingAlgorithm, BitBasedSort
 from ssakg.ssakg import SSAKG
 
 
@@ -40,9 +40,13 @@ class SSAKG_Tester:
         self.unsorted_elements_test = [0, 0]
         self.unsorted_percentage = 0
         if algorithms_list is None:
-            self.algorithms_list = [SimpleSort(), NodeOrderingAlgorithm(),
-                                    EnhancedNodeOrderingAlgorithm(),
-                                    WeightedEdgesNodeOrderingAlgorithm()]
+
+            if self.bit_based:
+                self.algorithms_list = [BitBasedSort()]
+            else:
+                self.algorithms_list = [SimpleSort(), NodeOrderingAlgorithm(),
+                                        EnhancedNodeOrderingAlgorithm(),
+                                        WeightedEdgesNodeOrderingAlgorithm()]
 
     def add_algorithm(self, name: str):
         histogram = np.zeros(self.sequence_length + 1, dtype=np.int16)
@@ -53,17 +57,16 @@ class SSAKG_Tester:
     def ordering_test(self, translated_sequence, context_sequence, bits_sorted_sequence=None):
         use_only_first_path = True
 
-        if self.bit_based:
-            result, agreement = SSAKG.compare_sorted_sequences(translated_sequence, bits_sorted_sequence)
-            # The bit-based algorithm have built-in sort function.
-            self.add_values(agreement, "Bits sort")
-        else:
-            for algorithm in self.algorithms_list:
-                sorted_sequence, _ = self.ssakg.order_sequence(context_sequence, algorithm,
+        for algorithm in self.algorithms_list:
+            if self.bit_based:
+                # The bit-based algorithm have built-in sort function.
+                sorted_sequence, _ = self.ssakg.order_sequence(bits_sorted_sequence, algorithm,
                                                                use_only_first_path)
+            else:
+                sorted_sequence, _ = self.ssakg.order_sequence(context_sequence, algorithm, use_only_first_path)
 
-                result, agreement = SSAKG.compare_sorted_sequences(translated_sequence, sorted_sequence)
-                self.add_values(agreement, str(algorithm))
+            result, agreement = SSAKG.compare_sorted_sequences(translated_sequence, sorted_sequence)
+            self.add_values(agreement, str(algorithm))
 
     def add_value(self, algorithm_name: str, agreement: np.ndarray):
         no_result = np.sum(agreement)

@@ -83,6 +83,16 @@ class OrderingAlgorithm:
 
         return all_paths
 
+class BitBasedSort(OrderingAlgorithm):
+    # The bit-based algorithm have built-in sort function.
+    def __call__(self, sequence_array: np.ndarray, use_only_first_path=False):
+        
+        # The sequence is sorted, so the function returns consecutive indices starting from 1.
+        return np.arange(len(sequence_array))
+
+    def __str__(self):
+        return "Bit based sort"
+
 
 class NodeOrderingAlgorithm(OrderingAlgorithm):
     def _ordering_function(self, array: np.ndarray, max_index: int):

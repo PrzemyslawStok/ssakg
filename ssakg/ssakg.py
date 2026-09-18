@@ -14,9 +14,11 @@ import numpy as np
 import warnings
 
 from ssakg.anakg import ANAKG
-from ssakg.ordering_algorithms import OrderingAlgorithm, WeightedEdgesNodeOrderingAlgorithm
+from ssakg.ordering_algorithms import OrderingAlgorithm, WeightedEdgesNodeOrderingAlgorithm, BitBasedSort
 
 import ssakg_extension as ssakg_ext
+
+
 # from . import ssakg_extension as ssakg_ext
 
 
@@ -150,6 +152,11 @@ class SSAKG(ANAKG):
     def order_sequence(self, sequence: np.ndarray, ordering_alg: OrderingAlgorithm | None = None,
                        use_only_first_path=False) -> (
             np.ndarray | None, int):
+
+        # nothing to sort
+        if isinstance(ordering_alg, BitBasedSort):
+            return sequence, 1
+
         sequence_matrix = self.get_subgraph_from_sequence(sequence)
         if sequence_matrix is None:
             return None, 0
