@@ -51,7 +51,7 @@ class GraphView:
             sg = graph.subgraph(subgraph.nodes())
 
             if to_print:
-                nx.draw_networkx(sg, node_size=1000, font_size=20, with_labels=True,
+                nx.draw_networkx(sg, node_size=2000, font_size=30, with_labels=True,
                                  pos=positions, node_color=color, width=5.5, connectionstyle="arc3, rad = 0.1")
             else:
                 nx.draw_networkx(sg, with_labels=True,
@@ -74,18 +74,14 @@ class GraphView:
     def graph_from_matrix(self, matrix: np.array, add_empty_nodes=True, color: str = "yellow", to_print=True):
         graph = self.graph_to_draw.copy()
         it = np.nditer(matrix, flags=["multi_index"])
-        if to_print:
-            renumber_nodes = 1
-        else:
-            renumber_nodes = 0
 
         for edges in it:
             if edges > 0:
                 for i in range(edges):
-                    graph.add_edge(it.multi_index[0] + renumber_nodes, it.multi_index[1] + renumber_nodes)
+                    graph.add_edge(it.multi_index[0], it.multi_index[1])
             else:
                 if add_empty_nodes:
-                    graph.add_node(it.multi_index[0] + renumber_nodes)
+                    graph.add_node(it.multi_index[0])
 
         self.sub_graphs.append((graph, color))
 
