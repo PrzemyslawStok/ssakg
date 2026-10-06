@@ -12,7 +12,6 @@
 
 import numpy as np
 
-
 class OrderingAlgorithm:
     def __init__(self, dtype=np.int16):
         self.dtype = dtype

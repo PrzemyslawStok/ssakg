@@ -16,6 +16,7 @@ import pandas as pd
 import seaborn as sns
 import warnings
 import sys
+import time
 
 from pyprind import ProgBar
 
@@ -39,14 +40,13 @@ class SSAKG_Tester:
         self.bit_based = ssakg.bit_based
         self.unsorted_elements_test = [0, 0]
         self.unsorted_percentage = 0
+        self.test_time = 0
         if algorithms_list is None:
-
-            if self.bit_based:
-                self.algorithms_list = [BitBasedSort()]
-            else:
-                self.algorithms_list = [SimpleSort(), NodeOrderingAlgorithm(),
-                                        EnhancedNodeOrderingAlgorithm(),
-                                        WeightedEdgesNodeOrderingAlgorithm()]
+            self.algorithms_list = [SimpleSort(), NodeOrderingAlgorithm(),
+                                    EnhancedNodeOrderingAlgorithm(),
+                                    WeightedEdgesNodeOrderingAlgorithm()]
+        if self.bit_based:
+            self.algorithms_list = [BitBasedSort()]
 
     def add_algorithm(self, name: str):
         histogram = np.zeros(self.sequence_length + 1, dtype=np.int16)
@@ -121,6 +121,8 @@ class SSAKG_Tester:
         else:
             bar = None
 
+        start_time = time.perf_counter()
+
         # The context may contain recurring elements. Symbols assigned to such elements are assigned dynamically.
         # To obtain a context with recurring elements,
         # the simplest way is to translate the entire sequence and choose the desired context.
@@ -147,6 +149,9 @@ class SSAKG_Tester:
 
         self.unsorted_percentage = (self.unsorted_elements_test[0] /
                                     (self.unsorted_elements_test[0] + self.unsorted_elements_test[1]) * 100)
+
+        self.test_time = time.perf_counter() - start_time
+
         return self.unsorted_percentage
 
     def create_agreements_dataframe(self) -> pd.DataFrame:
@@ -223,6 +228,18 @@ class SSAKG_Tester:
 
         return df
 
+    def get_agreement_percentage(self):
+        agreements = []
+        for _, values_set in self.algorithms_test.items():
+            correct_sort = values_set[1]
+            all_values = values_set[2]
+            if all_values > 0:
+                agreements.append(correct_sort / all_values * 100)
+        return agreements
+
+    def get_sorted_percentage(self):
+        return max(self.get_agreement_percentage()) / 100 * self.unsorted_percentage
+
     def print_dataframe(self):
         df = self.create_dataframe()
         print(df.to_string(formatters={"correct sort percentage": "{:2,.2f}%".format}))
@@ -234,6 +251,8 @@ class SSAKG_Tester:
         algorithm_info += f"sequence length: {self.sequence_length}\n"
         algorithm_info += f"context length: {self.context_length}\n"
         algorithm_info += f"unordered sequences restored: {self.unsorted_percentage:.2f}%\n"
+        algorithm_info += f"ordered sequences restored: {self.get_sorted_percentage():.2f}%\n"
+        algorithm_info += f"elapsed time: {self.test_time:.6f}s\n"
         df = self.create_dataframe()
         algorithm_info += df.to_string(formatters={"correct sort percentage": "{:2,.2f}%".format})
 
