@@ -238,7 +238,15 @@ class SSAKG_Tester:
         return agreements
 
     def get_sorted_percentage(self):
+        if len(self.get_agreement_percentage()) == 0:
+            return 0
         return max(self.get_agreement_percentage()) / 100 * self.unsorted_percentage
+
+    def get_unsorted_percentage(self):
+        return self.unsorted_percentage
+
+    def get_test_time(self):
+        return self.test_time
 
     def print_dataframe(self):
         df = self.create_dataframe()
