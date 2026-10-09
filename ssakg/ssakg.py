@@ -19,45 +19,73 @@ from ssakg.ordering_algorithms import OrderingAlgorithm, WeightedEdgesNodeOrderi
 import ssakg_extension as ssakg_ext
 
 
-# from . import ssakg_extension as ssakg_ext
-
-
 class SSAKG(ANAKG):
     def __init__(self, number_of_symbols: int = 10, sequence_length: int = 5, dtype=None, graphs_to_drawing=False,
                  remove_diagonals=True, weighted_edges=True, bit_based=False):
+        """Initialize the associative memory.
+
+        Parameters
+        ----------
+        number_of_symbols : int, default=10
+            Number of distinct symbols used by the associative memory.
+        sequence_length : int, default=5
+            Length of the sequences stored in memory.
+        bit_based : bool, default=False
+            Whether to use the bit-based memory algorithm instead of the standard algorithm.
+        graphs_to_drawing : bool, default=False
+            Whether to enable graph visualization (only for small memory instances).
+        remove_diagonals : bool, default=True
+            Whether to remove diagonal elements from the graph representation.
+        weighted_edges : bool, default=True
+            Whether to use weighted edges in the graph representation.
+        dtype : optional
+            Data type used for the memory representation.
+        """
         super().__init__(number_of_symbols, sequence_length, graphs_to_drawing, remove_diagonals,
                          weighted_edges, bit_based, dtype)
 
         self.new_sequences_added = False
         self.bit_based = bit_based
 
-    def eval_non_zero_elements_loops(self, graph: np.ndarray, context=None) -> np.ndarray:
-        graph_rows_no = len(graph)
-        context_length = len(context)
+    def get_sequence(self, context):
+        """Retrieve a sequence from memory using the given context.
 
-        context_array = np.zeros((context_length, graph_rows_no), dtype=np.int16)
-        row_prod = np.ones(graph_rows_no, dtype=np.int16)
-        pyton_elements = "["
-        for i in range(graph_rows_no):
-            for j in range(context_length):
-                context_array[j, i] = graph[context[j], i] + graph[i, context[j]]
+        Parameters
+        ----------
+        context : ...
+            Context used to retrieve the sequence from memory.
+        """
+        context = self.sequence_from_placeholders(context)
+        return self.__get_sequence(context, decode_sequence=True, context_is_translated=True)
 
-                if i == context[j]:
-                    context_array[j, i] += 1
+    def insert_sequence(self, sequence: np.ndarray) -> np.ndarray | None:
+        """Insert a single sequence into associated memory.
 
-                if context_array[j, i] != 0:
-                    pyton_elements += " " + str(context_array[j, i])
+        Parameters
+        ----------
+        sequence : np.ndarray
+            Sequence to be inserted into memory.
 
-                row_prod[i] *= context_array[j, i] != 0
-                if row_prod[i] == 0:
-                    break
-        pyton_elements += " ]"
-        print(f"elements: {pyton_elements}")
-        non_zeros = np.where(row_prod != 0)[0]
+        Returns
+        -------
+        np.ndarray or None
+            The result of the insertion, if applicable; otherwise, None.
+        """
+        self.new_sequences_added = True
+        return super().insert_sequence(sequence)
 
-        return non_zeros
+    def insert(self, sequences: np.ndarray):
+        """Insert multiple sequences into associated memory.
 
-    def get_unsorted_elements(self, context: np.ndarray, context_is_translated=False) -> (
+        Parameters
+        ----------
+        sequences : np.ndarray
+            Sequences to be inserted into memory.
+        """
+        self.new_sequences_added = True
+        return super().insert(sequences)
+
+    def _get_sequence_elements(self, context: np.ndarray, context_is_translated=False) -> (
             np.ndarray, np.ndarray):
 
         if context_is_translated:
@@ -88,7 +116,7 @@ class SSAKG(ANAKG):
     def __get_sequence(self, context: np.ndarray, decode_sequence=True, context_is_translated=False,
                        ordering_alg=WeightedEdgesNodeOrderingAlgorithm()) -> np.ndarray | list:
 
-        unsorted_elements, _ = self.get_unsorted_elements(context, context_is_translated)
+        unsorted_elements, _ = self._get_sequence_elements(context, context_is_translated)
 
         if unsorted_elements is None:
             return None
@@ -99,18 +127,6 @@ class SSAKG(ANAKG):
             return self.decode_sequence(sorted_elements)
 
         return sorted_elements
-
-    def get_sequence(self, context):
-        context = self.sequence_from_placeholders(context)
-        return self.__get_sequence(context, decode_sequence=True, context_is_translated=True)
-
-    def insert_sequence(self, sequence: np.ndarray) -> np.ndarray | None:
-        self.new_sequences_added = True
-        return super().insert_sequence(sequence)
-
-    def insert(self, sequences: np.ndarray):
-        self.new_sequences_added = True
-        return super().insert(sequences)
 
     @staticmethod
     def context_from_sequence(context_length: int, sequence: np.ndarray) -> np.ndarray:

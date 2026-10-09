@@ -32,7 +32,10 @@ def table_symbols_sequences(symbols_list: list[int], number_of_sequences_list: l
             sequences = sequence_generator.generate_unique_sequences(no_sequences, unique_elements=unique_elements)
             ssakg.insert(sequences)
 
-            ssakg_tester = SSAKG_Tester(ssakg, sequences)
+            if bit_based:
+                ssakg_tester = SSAKG_Tester(ssakg, sequences)
+            else:
+                ssakg_tester = SSAKG_Tester(ssakg, sequences, algorithms_list=[WeightedEdgesNodeOrderingAlgorithm()])
             ssakg_tester.make_test(context_length=context_length,
                                    show_progress=show_progress)
 
@@ -75,11 +78,7 @@ def table_various_context(no_symbols: int, number_of_sequences_list: list[int], 
         ssakg.insert(sequences)
         ssakg_bits.insert(sequences)
 
-        if bit_based:
-            ssakg_tester = SSAKG_Tester(ssakg, sequences)
-        else:
-            ssakg_tester = SSAKG_Tester(ssakg, sequences, algorithms_list=[WeightedEdgesNodeOrderingAlgorithm()])
-
+        ssakg_tester = SSAKG_Tester(ssakg, sequences, algorithms_list=[WeightedEdgesNodeOrderingAlgorithm()])
         ssakg_tester_bits = SSAKG_Tester(ssakg_bits, sequences)
 
         for j, length in enumerate(context_list):
