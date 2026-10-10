@@ -85,7 +85,7 @@ class SSAKG(ANAKG):
         self.new_sequences_added = True
         return super().insert(sequences)
 
-    def _get_sequence_elements(self, context: np.ndarray, context_is_translated=False) -> (
+    def get_sequence_elements(self, context: np.ndarray, context_is_translated=False) -> (
             np.ndarray, np.ndarray):
 
         if context_is_translated:
@@ -116,7 +116,7 @@ class SSAKG(ANAKG):
     def __get_sequence(self, context: np.ndarray, decode_sequence=True, context_is_translated=False,
                        ordering_alg=WeightedEdgesNodeOrderingAlgorithm()) -> np.ndarray | list:
 
-        unsorted_elements, _ = self._get_sequence_elements(context, context_is_translated)
+        unsorted_elements, _ = self.get_sequence_elements(context, context_is_translated)
 
         if unsorted_elements is None:
             return None

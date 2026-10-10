@@ -131,8 +131,8 @@ class SSAKG_Tester:
             context = self._create_context(self.sequences[i], context_length)
             # Now we have the correct context directly. We can read unsorted elements from ssakg.
             # Context is currently translated
-            bits_sorted_sequence, unsorted_sequence = self.ssakg._get_sequence_elements(context,
-                                                                                        context_is_translated=True)
+            bits_sorted_sequence, unsorted_sequence = self.ssakg.get_sequence_elements(context,
+                                                                                       context_is_translated=True)
 
             if SSAKG.compare_sets_of_elements(self._sequence_to_compare_elements(self.sequences[i]),
                                               self._sequence_with_unsorted_elements(unsorted_sequence)):
