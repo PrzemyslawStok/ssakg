@@ -21,7 +21,7 @@ import ssakg_extension as ssakg_ext
 
 class SSAKG(ANAKG):
     def __init__(self, number_of_symbols: int = 10, sequence_length: int = 5, dtype=None, graphs_to_drawing=False,
-                 remove_diagonals=True, weighted_edges=True, bit_based=False):
+                 bit_based=False):
         """Initialize the associative memory.
 
         Parameters
@@ -34,15 +34,10 @@ class SSAKG(ANAKG):
             Whether to use the bit-based memory algorithm instead of the standard algorithm.
         graphs_to_drawing : bool, default=False
             Whether to enable graph visualization (only for small memory instances).
-        remove_diagonals : bool, default=True
-            Whether to remove diagonal elements from the graph representation.
-        weighted_edges : bool, default=True
-            Whether to use weighted edges in the graph representation.
         dtype : optional
             Data type used for the memory representation.
         """
-        super().__init__(number_of_symbols, sequence_length, graphs_to_drawing, remove_diagonals,
-                         weighted_edges, bit_based, dtype)
+        super().__init__(number_of_symbols, sequence_length, graphs_to_drawing, bit_based, dtype)
 
         self.new_sequences_added = False
         self.bit_based = bit_based

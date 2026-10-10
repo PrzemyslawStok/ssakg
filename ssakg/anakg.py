@@ -30,8 +30,8 @@ from ssakg.subgraph_patterns import SubgraphPatterns
 
 
 class ANAKG:
-    def __init__(self, graph_dim: int = 10, subgraph_dim: int = 5, graphs_to_drawing=False,
-                 remove_diagonals=True, weighted_edges=True, bit_based=False, dtype=None):
+    def __init__(self, graph_dim: int = 10, subgraph_dim: int = 5, graphs_to_drawing=False, bit_based=False,
+                 dtype=None):
 
         # The parameter graphs_to_drawing is only for draw colorfully graph to examples.
         # Do not use it for other purposes.
@@ -67,13 +67,9 @@ class ANAKG:
                                                       dtype=self.translator_dtype)
 
         if not bit_based:
-            self.subgraph_pattern = SubgraphPatterns.create_upper_triangular(self.subgraph_dim,
-                                                                             remove_diagonals=remove_diagonals,
-                                                                             weighted_edges=weighted_edges,
-                                                                             dtype=self.dtype)
+            self.subgraph_pattern = SubgraphPatterns.create_upper_triangular(self.subgraph_dim, dtype=self.dtype)
         else:
-            self.subgraph_pattern = SubgraphPatterns.bits_square(self.subgraph_dim,
-                                                                 dtype=self.dtype)
+            self.subgraph_pattern = SubgraphPatterns.bits_square(self.subgraph_dim, dtype=self.dtype)
 
         self.graph = self.crate_graph()
         self.sequences = []
