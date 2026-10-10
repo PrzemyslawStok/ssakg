@@ -9,6 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Tuple
 
 import numpy as np
 import warnings
@@ -21,7 +22,7 @@ import ssakg_extension as ssakg_ext
 
 class SSAKG(ANAKG):
     def __init__(self, number_of_symbols: int = 10, sequence_length: int = 5, dtype=None, graphs_to_drawing=False,
-                 remove_diagonals=True, weighted_edges=True, bit_based=False):
+                 bit_based=False):
         """Initialize the associative memory.
 
         Parameters
@@ -34,15 +35,10 @@ class SSAKG(ANAKG):
             Whether to use the bit-based memory algorithm instead of the standard algorithm.
         graphs_to_drawing : bool, default=False
             Whether to enable graph visualization (only for small memory instances).
-        remove_diagonals : bool, default=True
-            Whether to remove diagonal elements from the graph representation.
-        weighted_edges : bool, default=True
-            Whether to use weighted edges in the graph representation.
         dtype : optional
             Data type used for the memory representation.
         """
-        super().__init__(number_of_symbols, sequence_length, graphs_to_drawing, remove_diagonals,
-                         weighted_edges, bit_based, dtype)
+        super().__init__(number_of_symbols, sequence_length, graphs_to_drawing, bit_based, dtype)
 
         self.new_sequences_added = False
         self.bit_based = bit_based
@@ -85,8 +81,8 @@ class SSAKG(ANAKG):
         self.new_sequences_added = True
         return super().insert(sequences)
 
-    def get_sequence_elements(self, context: np.ndarray, context_is_translated=False) -> (
-            np.ndarray, np.ndarray):
+    def get_sequence_elements(self, context: np.ndarray, context_is_translated=False) -> Tuple[
+            np.ndarray, np.ndarray]|Tuple[None,None]:
 
         if context_is_translated:
             translated_context = context
@@ -114,7 +110,7 @@ class SSAKG(ANAKG):
             return unsorted_elements, unsorted_elements
 
     def __get_sequence(self, context: np.ndarray, decode_sequence=True, context_is_translated=False,
-                       ordering_alg=WeightedEdgesNodeOrderingAlgorithm()) -> np.ndarray | list:
+                       ordering_alg=WeightedEdgesNodeOrderingAlgorithm()) -> np.ndarray | None:
 
         unsorted_elements, _ = self.get_sequence_elements(context, context_is_translated)
 
@@ -137,7 +133,7 @@ class SSAKG(ANAKG):
         return context_array
 
     @staticmethod
-    def compare_sorted_sequences(sequence_1: np.ndarray, sequence_2: np.ndarray) -> (bool, np.ndarray):
+    def compare_sorted_sequences(sequence_1: np.ndarray, sequence_2: np.ndarray) -> Tuple[bool, np.ndarray]:
         agreement = np.zeros(len(sequence_1), dtype=np.int8)
 
         if sequence_1 is None or sequence_2 is None:
@@ -166,8 +162,8 @@ class SSAKG(ANAKG):
             return True
 
     def order_sequence(self, sequence: np.ndarray, ordering_alg: OrderingAlgorithm | None = None,
-                       use_only_first_path=False) -> (
-            np.ndarray | None, int):
+                       use_only_first_path=False) -> Tuple[
+            np.ndarray | None, int]:
 
         # nothing to sort
         if isinstance(ordering_alg, BitBasedSort):

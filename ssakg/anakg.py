@@ -11,6 +11,7 @@
 # limitations under the License.
 
 import os
+from typing import Tuple
 
 import numpy as np
 
@@ -30,8 +31,8 @@ from ssakg.subgraph_patterns import SubgraphPatterns
 
 
 class ANAKG:
-    def __init__(self, graph_dim: int = 10, subgraph_dim: int = 5, graphs_to_drawing=False,
-                 remove_diagonals=True, weighted_edges=True, bit_based=False, dtype=None):
+    def __init__(self, graph_dim: int = 10, subgraph_dim: int = 5, graphs_to_drawing=False, bit_based=False,
+                 dtype=None):
 
         # The parameter graphs_to_drawing is only for draw colorfully graph to examples.
         # Do not use it for other purposes.
@@ -67,13 +68,9 @@ class ANAKG:
                                                       dtype=self.translator_dtype)
 
         if not bit_based:
-            self.subgraph_pattern = SubgraphPatterns.create_upper_triangular(self.subgraph_dim,
-                                                                             remove_diagonals=remove_diagonals,
-                                                                             weighted_edges=weighted_edges,
-                                                                             dtype=self.dtype)
+            self.subgraph_pattern = SubgraphPatterns.create_upper_triangular(self.subgraph_dim, dtype=self.dtype)
         else:
-            self.subgraph_pattern = SubgraphPatterns.bits_square(self.subgraph_dim,
-                                                                 dtype=self.dtype)
+            self.subgraph_pattern = SubgraphPatterns.bits_square(self.subgraph_dim, dtype=self.dtype)
 
         self.graph = self.crate_graph()
         self.sequences = []
@@ -83,7 +80,7 @@ class ANAKG:
         # The parameter graph_matrices is only for draw colorfully graph to examples.
         self.graph_matrices = []
 
-    def set_subgraph_pattern(self, subgraph_pattern: np.array):
+    def set_subgraph_pattern(self, subgraph_pattern: np.ndarray):
         self.subgraph_pattern = subgraph_pattern
 
     def crate_graph(self):
@@ -239,7 +236,7 @@ class ANAKG:
         graph_view = self.create_graph_view(to_print=to_print)
         graph_view.draw(title=None, to_print=to_print)
 
-    def save_fig(self, title: (str, str), output_dir: str = None, output_file: str = None, to_print=True):
+    def save_fig(self, title: Tuple[str, str], output_dir: str = None, output_file: str = None, to_print=True):
         if not self.graphs_to_drawing:
             warnings.warn("Sequences are not stored. Graph view is empty.")
 
