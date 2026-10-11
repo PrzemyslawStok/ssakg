@@ -98,14 +98,6 @@ class ANAKG:
 
         self.graph = self.graph + temp_graph
 
-    def add_random_subgraph(self):
-        rand_min = 0
-        rand_max = len(self.graph) - self.subgraph_dim + 1
-        i = np.random.randint(rand_min, rand_max)
-        j = np.random.randint(rand_min, rand_max)
-
-        self.add_subgraph(i, j)
-
     def add_dim_to_graph(self, dim_to_add: int):
         self.graph_dim += dim_to_add
         self.graph = np.pad(self.graph, (0, dim_to_add), 'constant')
