@@ -10,13 +10,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TYPE_CHECKING
 import numpy as np
+
+if TYPE_CHECKING:
+    from ssakg.ssakg import SSAKG
+
 
 class OrderingAlgorithm:
     def __init__(self, dtype=np.int16):
         self.dtype = dtype
 
-    def __call__(self, sequence_array: np.ndarray, use_only_first_path=False):
+    def __call__(self, ssakg: 'SSAKG', sequence: np.ndarray, use_only_first_path=False):
+        sequence_array = ssakg.get_subgraph_from_sequence(sequence)
+        if sequence_array is None:
+            return None
+
         all_paths = self.__ordering_algorithm(sequence_array, [], [], max_index=len(sequence_array) + 1,
                                               use_only_first_path=use_only_first_path)
         new_paths = []
@@ -50,7 +59,7 @@ class OrderingAlgorithm:
 
         return new_path
 
-    def __ordering_algorithm(self, array: np.array, path: list, all_paths: list,
+    def __ordering_algorithm(self, array: np.ndarray, path: list, all_paths: list,
                              max_index=None, use_only_first_path=False):
         if len(array) == 0:
             all_paths.append(path)
@@ -82,12 +91,12 @@ class OrderingAlgorithm:
 
         return all_paths
 
+
 class BitBasedSort(OrderingAlgorithm):
     # The bit-based algorithm have built-in sort function.
-    def __call__(self, sequence_array: np.ndarray, use_only_first_path=False):
-        
+    def __call__(self, ssakg: 'SSAKG', sequence: np.ndarray, use_only_first_path=False):
         # The sequence is sorted, so the function returns consecutive indices starting from 1.
-        return np.arange(len(sequence_array))
+        return [np.arange(len(sequence))]
 
     def __str__(self):
         return "Bit based sort"
@@ -100,9 +109,12 @@ class NodeOrderingAlgorithm(OrderingAlgorithm):
     def __str__(self):
         return "Node Ordering"
 
-
 class SimpleSort(NodeOrderingAlgorithm):
-    def __call__(self, sequence_array: np.ndarray, use_only_first_path=False):
+    def __call__(self, ssakg: 'SSAKG', sequence: np.ndarray, use_only_first_path=False):
+        sequence_array = ssakg.get_subgraph_from_sequence(sequence)
+        if sequence_array is None:
+            return None
+
         return self.__sort(sequence_array)
 
     def __sort(self, sequence_array: np.ndarray) -> list:
@@ -118,8 +130,8 @@ class SimpleSort(NodeOrderingAlgorithm):
 
 
 class SimpleSortWeighted(NodeOrderingAlgorithm):
-    def __call__(self, sequence_array: np.ndarray, use_only_first_path=False):
-        return self.__sort(sequence_array)
+    def __call__(self, ssakg: 'SSAKG', sequence: np.ndarray, use_only_first_path=False):
+        return self.__sort(sequence)
 
     def __sort(self, sequence_array: np.ndarray) -> list:
         weight_row_sum = SimpleSortWeighted.create_wight_array_row_sum(sequence_array)
@@ -207,38 +219,3 @@ class WeightedEdgesNodeOrderingAlgorithm(OrderingAlgorithm):
 
     def __str__(self):
         return "Weighted Edges Ordering"
-
-
-class BitsNodeOrderingAlgorithm(OrderingAlgorithm):
-    def _ordering_function(self, array: np.ndarray, max_index: int):
-        indices_with_no_zeros = OrderingAlgorithm.find_indexes_with_min_zeros_count(array)
-
-        if len(indices_with_no_zeros) == 0:
-            return np.array([])
-
-        bit_no = max_index - len(array)
-        correct_number = 2 ** (bit_no - 1)
-
-        max_index_array = indices_with_no_zeros
-
-        if len(indices_with_no_zeros) > 1:
-            max_correct_numbers = 0
-            current_number_list = []
-
-            for index in indices_with_no_zeros:
-                current_correct_numbers = len(np.where(array[index] == correct_number)[0])
-
-                if current_correct_numbers == max_correct_numbers:
-                    current_number_list.append(index)
-
-                if current_correct_numbers > max_correct_numbers:
-                    current_number_list = [index]
-
-                    max_correct_numbers = current_correct_numbers
-
-            max_index_array = np.array(current_number_list).astype(int)
-
-        return max_index_array
-
-    def __str__(self):
-        return "Bits Node Ordering"

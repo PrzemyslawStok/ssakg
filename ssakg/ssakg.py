@@ -82,7 +82,8 @@ class SSAKG(ANAKG):
         return super().insert(sequences)
 
     def get_sequence_elements(self, context: np.ndarray, context_is_translated=False) -> Tuple[
-            np.ndarray, np.ndarray]|Tuple[None,None]:
+                                                                                             np.ndarray, np.ndarray] | \
+                                                                                         Tuple[None, None]:
 
         if context_is_translated:
             translated_context = context
@@ -163,17 +164,14 @@ class SSAKG(ANAKG):
 
     def order_sequence(self, sequence: np.ndarray, ordering_alg: OrderingAlgorithm | None = None,
                        use_only_first_path=False) -> Tuple[
-            np.ndarray | None, int]:
+        np.ndarray | None, int]:
 
-        # nothing to sort
-        if isinstance(ordering_alg, BitBasedSort):
-            return sequence, 1
 
-        sequence_matrix = self.get_subgraph_from_sequence(sequence)
-        if sequence_matrix is None:
+        orderings = ordering_alg(self, sequence=sequence,
+                                 use_only_first_path=use_only_first_path)
+
+        if orderings is None:
             return None, 0
-
-        orderings = ordering_alg(sequence_array=sequence_matrix, use_only_first_path=use_only_first_path)
 
         new_ordering = orderings[0]
         sorted_sequence = sequence[new_ordering]

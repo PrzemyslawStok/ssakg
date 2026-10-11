@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from ssakg.ordering_algorithms import WeightedEdgesNodeOrderingAlgorithm
+from ssakg.ordering_algorithms import WeightedEdgesNodeOrderingAlgorithm, SimpleSort
 
 from ssakg import SSAKG, SSAKG_Tester, SequenceGenerator
 
@@ -35,7 +35,8 @@ def table_symbols_sequences(symbols_list: list[int], number_of_sequences_list: l
             if bit_based:
                 ssakg_tester = SSAKG_Tester(ssakg, sequences)
             else:
-                ssakg_tester = SSAKG_Tester(ssakg, sequences, algorithms_list=[WeightedEdgesNodeOrderingAlgorithm()])
+                ssakg_tester = SSAKG_Tester(ssakg, sequences,
+                                            algorithms_list=[SimpleSort(), WeightedEdgesNodeOrderingAlgorithm()])
             ssakg_tester.make_test(context_length=context_length,
                                    show_progress=show_progress)
 
