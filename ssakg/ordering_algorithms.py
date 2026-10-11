@@ -16,7 +16,6 @@ import numpy as np
 if TYPE_CHECKING:
     from ssakg.ssakg import SSAKG
 
-
 class OrderingAlgorithm:
     def __init__(self, dtype=np.int16):
         self.dtype = dtype
@@ -100,6 +99,12 @@ class BitBasedSort(OrderingAlgorithm):
 
     def __str__(self):
         return "Bit based sort"
+
+class BitBasedSortDummy(BitBasedSort):
+    # The bit-based algorithm have built-in sort function, this is only for test purpose.
+    def __str__(self):
+        return "Bit based sort dummy"
+
 
 
 class NodeOrderingAlgorithm(OrderingAlgorithm):

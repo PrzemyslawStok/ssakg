@@ -21,7 +21,7 @@ import time
 from pyprind import ProgBar
 
 from ssakg.ordering_algorithms import SimpleSort, NodeOrderingAlgorithm, EnhancedNodeOrderingAlgorithm, \
-    WeightedEdgesNodeOrderingAlgorithm, OrderingAlgorithm, BitBasedSort
+    WeightedEdgesNodeOrderingAlgorithm, OrderingAlgorithm, BitBasedSort, BitBasedSortDummy
 from ssakg.ssakg import SSAKG
 
 
@@ -46,7 +46,7 @@ class SSAKG_Tester:
                                     EnhancedNodeOrderingAlgorithm(),
                                     WeightedEdgesNodeOrderingAlgorithm()]
         if self.bit_based:
-            self.algorithms_list = [BitBasedSort()]
+            self.algorithms_list = [BitBasedSort(), BitBasedSortDummy()]
 
     def add_algorithm(self, name: str):
         histogram = np.zeros(self.sequence_length + 1, dtype=np.int16)
