@@ -16,6 +16,7 @@ import numpy as np
 if TYPE_CHECKING:
     from ssakg.ssakg import SSAKG
 
+
 class OrderingAlgorithm:
     def __init__(self, dtype=np.int16):
         self.dtype = dtype
@@ -100,11 +101,23 @@ class BitBasedSort(OrderingAlgorithm):
     def __str__(self):
         return "Bit based sort"
 
-class BitBasedSortDummy(BitBasedSort):
-    # The bit-based algorithm have built-in sort function, this is only for test purpose.
-    def __str__(self):
-        return "Bit based sort dummy"
 
+class BitBasedSortDummy(BitBasedSort):
+    def __init__(self, random_sort_percentage=10, dtype=np.uint16):
+        super().__init__(dtype)
+        self.random_sort_percentage = random_sort_percentage
+
+    # The bit-based algorithm have built-in sort function, this is only for test purpose.
+    def __call__(self, ssakg: 'SSAKG', sequence: np.ndarray, use_only_first_path=False):
+        # The sequence is sorted, so the function returns consecutive indices starting from 1.
+        rnd = np.random.random()
+        if rnd < self.random_sort_percentage / 100.0:
+            np.random.shuffle(sequence)
+
+        return [np.arange(len(sequence))]
+
+    def __str__(self):
+        return f"Bit based sort test error {self.random_sort_percentage}%"
 
 
 class NodeOrderingAlgorithm(OrderingAlgorithm):
@@ -113,6 +126,7 @@ class NodeOrderingAlgorithm(OrderingAlgorithm):
 
     def __str__(self):
         return "Node Ordering"
+
 
 class SimpleSort(NodeOrderingAlgorithm):
     def __call__(self, ssakg: 'SSAKG', sequence: np.ndarray, use_only_first_path=False):

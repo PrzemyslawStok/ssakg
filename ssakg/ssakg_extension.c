@@ -78,10 +78,6 @@ static PyArrayObject *get_non_zeros_indices(const char *array, const npy_intp st
                 break;
         }
 
-
-    // if (non_zeros_no == 0)
-    //     return NULL;
-
     const npy_intp dims_non_zeros[] = {non_zeros_no};
 
     PyArray_Descr *dtype = PyArray_DescrNewFromType(NPY_INTP);
