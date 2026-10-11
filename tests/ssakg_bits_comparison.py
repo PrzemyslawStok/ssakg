@@ -129,7 +129,7 @@ if __name__ == '__main__':
     sequence_test = True
     context_length_test = False
     if sequence_test:
-        bit_based = True
+        bit_based = False
         symbols_list = [1000, 2000]
         # sequences_list = [1000, 2000, 3000, 4000, 5000, 6000, 8000, 10000, 11000, 13000, 15000]
         sequences_list = [1000]
