@@ -9,6 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Tuple
 
 import numpy as np
 import re
@@ -41,7 +42,7 @@ class SequenceTranslator:
             return symbol_tuple[0]
         else:
             address_value = self.sequence_symbols_dictionary.item(symbol_tuple)
-            return address_value + self.no_unique_symbols
+            return int(address_value) + self.no_unique_symbols
 
     def __translate_sequence_tuples(self, sequence_tuple: np.ndarray) -> np.ndarray:
         # This function translates sequences with repeated elements into sequences with unique elements.
@@ -53,7 +54,7 @@ class SequenceTranslator:
             if address_value == 0:
                 new_sequence[index] = enumerated_sequence_tuple[0]
             else:
-                new_sequence[index] = address_value + self.no_unique_symbols - 1
+                new_sequence[index] = int(address_value) + self.no_unique_symbols - 1
 
         return new_sequence
 
@@ -70,7 +71,7 @@ class SequenceTranslator:
 
         return sequence_tuples
 
-    def translate_sequence(self, sequence: np.ndarray, add_to_dictionary=True) -> (np.ndarray, int):
+    def translate_sequence(self, sequence: np.ndarray, add_to_dictionary=True) -> Tuple[np.ndarray | None, int]:
         rows_to_add = 0
         sequence_tuples = self.__sequence_to_enumerated_tuples(sequence)
 

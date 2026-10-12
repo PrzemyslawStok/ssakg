@@ -229,7 +229,7 @@ class ANAKG:
         graph_view = self.create_graph_view()
         graph_view.draw(title=None, to_print=to_print)
 
-    def save_fig(self, title: Tuple[str, str], output_dir: str = None, output_file: str = None, to_print=True):
+    def save_fig(self, title: Tuple[str, str] | None, output_dir: str = None, output_file: str = None, to_print=True):
         if not self.graphs_to_drawing:
             warnings.warn("Sequences are not stored. Graph view is empty.")
 

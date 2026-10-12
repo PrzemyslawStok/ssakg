@@ -16,7 +16,6 @@ import numpy as np
 if TYPE_CHECKING:
     from ssakg.ssakg import SSAKG
 
-
 class OrderingAlgorithm:
     def __init__(self, dtype=np.int16):
         self.dtype = dtype
@@ -136,7 +135,8 @@ class SimpleSort(NodeOrderingAlgorithm):
 
         return self.__sort(sequence_array)
 
-    def __sort(self, sequence_array: np.ndarray) -> list:
+    @staticmethod
+    def __sort(sequence_array: np.ndarray) -> list:
         only_zeros = np.where(sequence_array == 0, 1, 0)
         number_zeros_in_columns = np.sum(only_zeros, axis=1)
 
@@ -150,9 +150,10 @@ class SimpleSort(NodeOrderingAlgorithm):
 
 class SimpleSortWeighted(NodeOrderingAlgorithm):
     def __call__(self, ssakg: 'SSAKG', sequence: np.ndarray, use_only_first_path=False):
-        return self.__sort(sequence)
+        return SimpleSortWeighted.__sort(sequence)
 
-    def __sort(self, sequence_array: np.ndarray) -> list:
+    @staticmethod
+    def __sort(sequence_array: np.ndarray) -> list:
         weight_row_sum = SimpleSortWeighted.create_wight_array_row_sum(sequence_array)
 
         only_zeros = np.where(sequence_array == 0, 1, 0)
