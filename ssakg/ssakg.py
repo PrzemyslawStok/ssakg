@@ -81,9 +81,7 @@ class SSAKG(ANAKG):
         self.new_sequences_added = True
         return super().insert(sequences)
 
-    def get_sequence_elements(self, context: np.ndarray, context_is_translated=False) -> Tuple[
-                                                                                             np.ndarray, np.ndarray] | \
-                                                                                         Tuple[None, None]:
+    def get_sequence_elements(self, context: np.ndarray, context_is_translated=False) -> np.ndarray | None:
 
         if context_is_translated:
             translated_context = context
@@ -91,35 +89,35 @@ class SSAKG(ANAKG):
             if len(unique_context) != len(context):
                 warnings.warn(
                     "List of symbols contains duplicate elements. Please use underscored symbols instead e.g. \"5_2\".")
-                return None, None
+                return None
         else:
             translated_context = self.translate_context(context)
 
         if translated_context is None:
-            return None, None
+            return None
 
         if self.bit_based:
             # The bit-based algorithm always produces sorted elements (called bits sort).
             # One can also use unsorted elements to test the external sorting function.
-            sorted_sequence, unsorted_sequence = ssakg_ext.get_sorted_elements_bits(self.graph,
-                                                                                    context.astype(np.uintp))
-            return sorted_sequence, unsorted_sequence
+            sequence_elements, _ = ssakg_ext.get_sorted_elements_bits(self.graph,
+                                                                      context.astype(np.uintp))
+            return sequence_elements
         else:
             # The data from published works (up to version ssakg 1.0) can be reproduced using an earlier version of the algorithm.
-            unsorted_elements = ssakg_ext.get_unsorted_elements(self.graph, translated_context.astype(
+            sequence_elements = ssakg_ext.get_unsorted_elements(self.graph, translated_context.astype(
                 dtype=np.uint32))
-            return unsorted_elements, unsorted_elements
+            return sequence_elements
 
     def __get_sequence(self, context: np.ndarray, decode_sequence=True, context_is_translated=False,
                        ordering_alg=WeightedEdgesNodeOrderingAlgorithm()) -> np.ndarray | None:
 
-        unsorted_elements, _ = self.get_sequence_elements(context, context_is_translated)
+        sequence_elements = self.get_sequence_elements(context, context_is_translated)
 
-        if unsorted_elements is None:
+        if sequence_elements is None:
             return None
-        sorted_elements, _ = self.order_sequence(unsorted_elements, ordering_alg=ordering_alg,
-                                                 use_only_first_path=True)
 
+        sorted_elements, _ = self.order_sequence(sequence_elements, ordering_alg=ordering_alg,
+                                                 use_only_first_path=True)
         if decode_sequence:
             return self.decode_sequence(sorted_elements)
 
@@ -165,7 +163,6 @@ class SSAKG(ANAKG):
     def order_sequence(self, sequence: np.ndarray, ordering_alg: OrderingAlgorithm | None = None,
                        use_only_first_path=False) -> Tuple[
         np.ndarray | None, int]:
-
 
         orderings = ordering_alg(self, sequence=sequence,
                                  use_only_first_path=use_only_first_path)

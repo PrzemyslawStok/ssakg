@@ -54,13 +54,13 @@ class SSAKG_Tester:
         all_values = 0
         self.algorithms_test[name] = [histogram, corrections, all_values]
 
-    def ordering_test(self, translated_sequence, context_sequence, bits_sorted_sequence=None):
+    def ordering_test(self, translated_sequence, context_sequence):
         use_only_first_path = True
 
         for algorithm in self.algorithms_list:
             if self.bit_based:
                 # The bit-based algorithm have built-in sort function.
-                sorted_sequence, _ = self.ssakg.order_sequence(bits_sorted_sequence, algorithm,
+                sorted_sequence, _ = self.ssakg.order_sequence(context_sequence, algorithm,
                                                                use_only_first_path)
             else:
                 sorted_sequence, _ = self.ssakg.order_sequence(context_sequence, algorithm, use_only_first_path)
@@ -131,16 +131,14 @@ class SSAKG_Tester:
             context = self._create_context(self.sequences[i], context_length)
             # Now we have the correct context directly. We can read unsorted elements from ssakg.
             # Context is currently translated
-            bits_sorted_sequence, unsorted_sequence = self.ssakg.get_sequence_elements(context,
-                                                                                       context_is_translated=True)
+            sequence_elements = self.ssakg.get_sequence_elements(context, context_is_translated=True)
 
             if SSAKG.compare_sets_of_elements(self._sequence_to_compare_elements(self.sequences[i]),
-                                              self._sequence_with_unsorted_elements(unsorted_sequence)):
+                                              self._sequence_with_unsorted_elements(sequence_elements)):
                 self.unsorted_elements_test[0] += 1
 
                 if ordering_test:
-                    self.ordering_test(self._sequence_to_ordering_test(self.sequences[i]), unsorted_sequence,
-                                       bits_sorted_sequence=bits_sorted_sequence)
+                    self.ordering_test(self._sequence_to_ordering_test(self.sequences[i]), sequence_elements)
             else:
                 self.unsorted_elements_test[1] += 1
 
