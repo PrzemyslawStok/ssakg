@@ -34,7 +34,7 @@ class SSAKG(ANAKG):
         bit_based : bool, default=False
             Whether to use the bit-based memory algorithm instead of the standard algorithm.
         graphs_to_drawing : bool, default=False
-            Whether to enable graph visualization (only for small memory instances).
+            Whether to enable graph visualization (only for small memory instances max 15 symbols and max 100 graphs).
         dtype : optional
             Data type used for the memory representation.
         """
