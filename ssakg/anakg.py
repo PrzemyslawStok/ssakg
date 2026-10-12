@@ -31,13 +31,13 @@ from ssakg.subgraph_patterns import SubgraphPatterns
 
 
 class ANAKG:
-    def __init__(self, number_of_symbols: int = 10, subgraph_dim: int = 5, graphs_to_drawing=False, bit_based=False,
+    def __init__(self, graph_dim: int = 10, subgraph_dim: int = 5, graphs_to_drawing=False, bit_based=False,
                  dtype=None):
 
         # The parameter graphs_to_drawing is only for draw colorfully graph to examples.
         # Do not use it for other purposes.
 
-        self.graph_dim = number_of_symbols
+        self.graph_dim = graph_dim
         self.subgraph_dim = subgraph_dim
 
         self.bit_based = bit_based
@@ -60,7 +60,7 @@ class ANAKG:
         else:
             self.dtype = dtype
 
-        if number_of_symbols > np.iinfo(np.uint16).max:
+        if graph_dim > np.iinfo(np.uint16).max:
             self.translator_dtype = np.uint32
 
         self.sequence_translator = SequenceTranslator(no_unique_symbols=self.graph_dim,
@@ -75,11 +75,12 @@ class ANAKG:
         self.graph = self.crate_graph()
         self.sequences = []
 
-        if self.graph_dim<=15:
-            self.graphs_to_drawing = graphs_to_drawing
-        else:
+        self.graphs_to_drawing = graphs_to_drawing
+
+        if self.graphs_to_drawing and self.graph_dim > 15:
             self.graphs_to_drawing = False
-            warnings.warn("Graph dimension must be less than 15. To visualise larger graphs, use the draw_density() function instead.")
+            warnings.warn(
+                "Graph dimension must be less than 15. To visualise larger graphs, use the draw_density() function instead.")
 
         # The parameter graph_matrices is only for draw colorfully graph to examples.
         self.graph_matrices = []
