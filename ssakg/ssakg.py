@@ -108,14 +108,17 @@ class SSAKG(ANAKG):
                 dtype=np.uint32))
             return sequence_elements
 
-    def __get_sequence(self, context: np.ndarray, decode_sequence=True, context_is_translated=False,
-                       ordering_alg=WeightedEdgesNodeOrderingAlgorithm()) -> np.ndarray | None:
+    def __get_sequence(self, context: np.ndarray, decode_sequence=True, context_is_translated=False) -> np.ndarray | None:
+
+        if not self.bit_based:
+            ordering_alg = WeightedEdgesNodeOrderingAlgorithm()
+        else:
+            ordering_alg = BitBasedSort()
 
         sequence_elements = self.get_sequence_elements(context, context_is_translated)
 
         if sequence_elements is None:
             return None
-
         sorted_elements, _ = self.order_sequence(sequence_elements, ordering_alg=ordering_alg,
                                                  use_only_first_path=True)
         if decode_sequence:

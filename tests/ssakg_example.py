@@ -14,7 +14,7 @@ def create_ssakg_test(bit_based=False, number_of_symbols=1000, number_of_sequenc
     sequences = sequence_generator.generate_unique_sequences(number_of_sequences, unique_elements=False)
     ssakg.insert(sequences)
 
-    ssakg_tester = SSAKG_Tester(ssakg, sequences,algorithms_list=[WeightedEdgesNodeOrderingAlgorithm()])
+    ssakg_tester = SSAKG_Tester(ssakg, sequences, algorithms_list=[WeightedEdgesNodeOrderingAlgorithm()])
     ssakg_tester.make_test(context_length=context_length, show_progress=True)
 
     ssakg_tester.plot_agreement_histogram(draw_text=True)
@@ -48,8 +48,9 @@ def crate_ssakg_similarity_test(number_of_symbols=1000, number_of_sequences=1000
     print(ssakg_tester)
     print(ssakg)
 
-def simple_read():
-    ssakg = SSAKG(number_of_symbols=20, sequence_length=5, graphs_to_drawing=False)
+
+def simple_read(bit_based: bool):
+    ssakg = SSAKG(number_of_symbols=20, sequence_length=5, graphs_to_drawing=False, bit_based=bit_based)
     ssakg.insert(np.array([[5, 1, 3, 4, 7], [1, 2, 11, 8, 5], [5, 1, 11, 2, 15]]))
 
     read_sequence = ssakg.get_sequence([3, 1, 5])
@@ -57,9 +58,9 @@ def simple_read():
 
 
 if __name__ == "__main__":
-    speed_test = True
+    speed_test = False
     similarity_test = False
-    simple_read_test = False
+    simple_read_test = True
 
     bit_based = True
     if speed_test:
@@ -69,4 +70,4 @@ if __name__ == "__main__":
         crate_ssakg_similarity_test(number_of_symbols=1000, number_of_sequences=100, sequence_length=15,
                                     context_length=6)
     if simple_read_test:
-        simple_read()
+        simple_read(bit_based=bit_based)
