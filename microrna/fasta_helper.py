@@ -14,8 +14,8 @@ import os
 import numpy as np
 
 class FastaHelper:
-    def __init__(self,dirname:str, *filenames:str,recreate_files=False):
-        self.dirname = dirname
+    def __init__(self, dir_name:str, *filenames:str, recreate_files=False):
+        self.dir_name = dir_name
         self.filenames = filenames
         self.recreate_files = recreate_files
         self.converted_filenames = self.__convert_mirbase_files()
@@ -33,8 +33,8 @@ class FastaHelper:
             extension = ".csv"
             filename_converted = f"{name}_converted{extension}"
 
-            if not os.path.exists(os.path.join(self.dirname, filename_converted)) or self.recreate_files:
-                file_path = os.path.join(self.dirname, filename)
+            if not os.path.exists(os.path.join(self.dir_name, filename_converted)) or self.recreate_files:
+                file_path = os.path.join(self.dir_name, filename)
                 with open(file_path, "r") as file:
                     for line in file:
                         if ">" in line:
@@ -45,7 +45,7 @@ class FastaHelper:
                         else:
                             current_line += line.strip()
 
-                with open(os.path.join(self.dirname, filename_converted), "w") as file:
+                with open(os.path.join(self.dir_name, filename_converted), "w") as file:
                     file.write(converted_text)
 
             converted_filenames_list.append(filename_converted)
@@ -56,7 +56,7 @@ class FastaHelper:
         sequences_list = []
 
         for filename in self.converted_filenames:
-            file_path = os.path.join(self.dirname, filename)
+            file_path = os.path.join(self.dir_name, filename)
             data = np.genfromtxt(file_path, dtype=None, delimiter=";", encoding="UTF-8", names=True)
 
             for _, sequence in data:

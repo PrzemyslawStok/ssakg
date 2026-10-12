@@ -65,7 +65,7 @@ def table_various_context(no_symbols: int, number_of_sequences_list: list[int], 
     dataframe_columns = [f"{length}" for length in context_list]
     dataframe_index_0 = [f"{value}" for sequences_no in number_of_sequences_list
                          for value in (f"{sequences_no}", f"{sequences_no}")]
-    dataframe_index_1 = [f"{value}" for sequences_no in number_of_sequences_list
+    dataframe_index_1 = [f"{value}" for _ in number_of_sequences_list
                          for value in (f"standard", f"bits")]
 
     index = pd.MultiIndex.from_arrays([dataframe_index_0, dataframe_index_1], names=["stored sequences", "algorithm"])

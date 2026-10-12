@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 import pandas as pd
 from ssakg.ordering_algorithms import WeightedEdgesNodeOrderingAlgorithm
@@ -6,7 +8,7 @@ from ssakg import SSAKG, SSAKG_Tester, SequenceGenerator
 
 def table_symbols_sequences_full(symbols_list: list[int], number_of_sequences_list: list[int], context_length,
                             sequence_length=15, unique_elements=False,
-                            show_progress=False) -> (pd.DataFrame, str):
+                            show_progress=False) -> Tuple[pd.DataFrame, str]:
     dataframe_columns = [f"{number_of_sequences}" for number_of_sequences in number_of_sequences_list]
     dataframe_index_0 = [f"{value}" for symbols in symbols_list
                          for value in
