@@ -1,3 +1,5 @@
+from typing import Tuple, Any
+
 import numpy as np
 import pandas as pd
 from ssakg.ordering_algorithms import WeightedEdgesNodeOrderingAlgorithm, SimpleSort
@@ -7,7 +9,7 @@ from ssakg import SSAKG, SSAKG_Tester, SequenceGenerator
 
 def table_symbols_sequences(symbols_list: list[int], number_of_sequences_list: list[int], context_length,
                             sequence_length=15, unique_elements=False,
-                            show_progress=False, bit_based=True) -> (pd.DataFrame, str):
+                            show_progress=False, bit_based=True) -> Tuple[pd.DataFrame, str, Any]:
     dataframe_columns = [f"{number_of_sequences}" for number_of_sequences in number_of_sequences_list]
     dataframe_index_0 = [f"{value}" for symbols in symbols_list
                          for value in
@@ -48,6 +50,8 @@ def table_symbols_sequences(symbols_list: list[int], number_of_sequences_list: l
 
     caption = f"Scene recognition error for various dataset size for sequence length {sequence_length}, context length {context_length}."
     dataframe = pd.DataFrame(data_table, index=index, columns=dataframe_columns)
+
+    # noinspection PyTypeChecker
     formated_table = dataframe.style.format("{:.2g}%").format("{:.2g}s",
                                                               subset=(pd.IndexSlice[:, ["elapsed"]],
                                                                       dataframe.columns)).set_caption(caption)
@@ -57,7 +61,7 @@ def table_symbols_sequences(symbols_list: list[int], number_of_sequences_list: l
 
 def table_various_context(no_symbols: int, number_of_sequences_list: list[int], context_list: list[int],
                           sequence_length=15, unique_elements=False,
-                          show_progress=False) -> (pd.DataFrame, str):
+                          show_progress=False) -> Tuple[pd.DataFrame, str]:
     dataframe_columns = [f"{length}" for length in context_list]
     dataframe_index_0 = [f"{value}" for sequences_no in number_of_sequences_list
                          for value in (f"{sequences_no}", f"{sequences_no}")]
@@ -97,8 +101,8 @@ def table_various_context(no_symbols: int, number_of_sequences_list: list[int], 
 
 
 def table_of_sequences_test(no_symbols_list, number_of_sequences_list, context_length=6, sequence_length=15,
-                            unique_elements=False, show_progress=False, bit_based=True) -> (
-        pd.DataFrame, str):
+                            unique_elements=False, show_progress=False, bit_based=True) -> Tuple[
+    pd.DataFrame, str]:
     table2_dataframe, caption, dataframe_formater = table_symbols_sequences(symbols_list=no_symbols_list,
                                                                             number_of_sequences_list=number_of_sequences_list,
                                                                             context_length=context_length,
@@ -128,14 +132,15 @@ def table_of_context_test(number_of_sequences_list, context_list, no_symbols=200
 if __name__ == '__main__':
     sequence_test = True
     context_length_test = False
+
     if sequence_test:
-        bit_based = False
-        symbols_list = [1000, 2000]
+        BIT_BASED = False
+        SYMBOLS_LIST = [1000, 2000]
         # sequences_list = [1000, 2000, 3000, 4000, 5000, 6000, 8000, 10000, 11000, 13000, 15000]
         sequences_list = [1000]
-        table1, caption1 = table_of_sequences_test(symbols_list, sequences_list, unique_elements=True,
-                                                   bit_based=bit_based)
+        table1, caption1 = table_of_sequences_test(SYMBOLS_LIST, sequences_list, unique_elements=True,
+                                                   bit_based=BIT_BASED)
     if context_length_test:
-        context_list = [3, 4, 5, 6, 7]
-        number_of_sequences_list = [1000, 2000, 3000, 4000, 5000]
-        table2, caption2 = table_of_context_test(unique_elements=True)
+        CONTEXT_LIST = [3, 4, 5, 6, 7]
+        NUMBER_OF_SEQUENCE_LIST = [1000, 2000, 3000, 4000, 5000]
+        table2, caption2 = table_of_context_test(CONTEXT_LIST, NUMBER_OF_SEQUENCE_LIST, unique_elements=True )

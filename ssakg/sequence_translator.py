@@ -99,6 +99,7 @@ class SequenceTranslator:
     def decode_sentence(self, sequence: np.ndarray) -> np.ndarray:
         current_enumerated_sequence = np.zeros(np.shape(sequence), dtype=self.dtype)
 
+        symbol: int
         for (i, symbol) in enumerate(sequence):
             if symbol < len(self.sequence_symbols_dictionary):
                 current_enumerated_sequence[i] = symbol

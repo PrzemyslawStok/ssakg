@@ -54,7 +54,7 @@ class SSAKG(ANAKG):
         context = self.sequence_from_placeholders(context)
         return self.__get_sequence(context, decode_sequence=True, context_is_translated=True)
 
-    def insert_sequence(self, sequence: np.ndarray) -> np.ndarray | None:
+    def insert_sequence(self, sequence: np.ndarray | list) -> np.ndarray | None:
         """Insert a single sequence into associated memory.
 
         Parameters
@@ -70,7 +70,7 @@ class SSAKG(ANAKG):
         self.new_sequences_added = True
         return super().insert_sequence(sequence)
 
-    def insert(self, sequences: np.ndarray):
+    def insert(self, sequences: np.ndarray | list) -> np.ndarray | None:
         """Insert multiple sequences into associated memory.
 
         Parameters
@@ -108,7 +108,8 @@ class SSAKG(ANAKG):
                 dtype=np.uint32))
             return sequence_elements
 
-    def __get_sequence(self, context: np.ndarray, decode_sequence=True, context_is_translated=False) -> np.ndarray | None:
+    def __get_sequence(self, context: np.ndarray, decode_sequence=True,
+                       context_is_translated=False) -> np.ndarray | None:
 
         if not self.bit_based:
             ordering_alg = WeightedEdgesNodeOrderingAlgorithm()

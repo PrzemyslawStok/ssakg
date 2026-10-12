@@ -4,11 +4,11 @@ from ssakg import SSAKG
 
 
 if __name__ == "__main__":
-    bit_based = False
+    BIT_BASED = False
 
     images_output_dir = "../images"
 
-    ssakg = SSAKG(number_of_symbols=10, sequence_length=3, graphs_to_drawing=True)
+    ssakg = SSAKG(number_of_symbols=10, sequence_length=3, graphs_to_drawing=True,bit_based=BIT_BASED)
 
     ssakg.insert_sequence(np.array([1, 2, 3]))
 
