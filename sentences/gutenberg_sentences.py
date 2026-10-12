@@ -9,6 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Tuple
 
 import nltk
 from nltk import FreqDist
@@ -82,8 +83,8 @@ def create_sentences(length_range: range, uppercase=False) -> list[list[str]]:
 
 
 def create_sentences_from_gutenberg_corpus(new_corpus_dir: str, new_corpus_path: str, length_range: range,
-                                           uppercase=False) -> (
-        list[str], FreqDist):
+                                           uppercase=False) -> Tuple[
+        list[str], FreqDist]:
     path = os.path.join(new_corpus_dir, new_corpus_path)
     split = create_sentences(uppercase=uppercase, length_range=length_range)
 
@@ -101,8 +102,8 @@ def create_sentences_from_gutenberg_corpus(new_corpus_dir: str, new_corpus_path:
 
 
 def read_sentences(new_corpus_dir: str, new_corpus_path: str, corpus_length_range: range,
-                   recreate_corpus, output_length_range: range, max_sentences=500, uppercase=False) -> (
-        list[list[str]], FreqDist):
+                   recreate_corpus, output_length_range: range, max_sentences=500, uppercase=False) -> Tuple[
+        list[list[str]], FreqDist]:
     path = os.path.join(new_corpus_dir, new_corpus_path)
 
     if not os.path.exists(path) or recreate_corpus:

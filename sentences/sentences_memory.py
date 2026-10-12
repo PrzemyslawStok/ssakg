@@ -9,7 +9,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -84,10 +83,7 @@ def create_random_sequences(sequence_length: int, number_sequences: int, symbol_
     return sequences
 
 
-def create_graph_with_sentences(encoded_sequences: np.ndarray, words_coder: SentencesCoder,
-                                remove_diagonals=True,
-                                weighted_edges=True) -> Tuple[
-        SSAKG, np.ndarray]:
+def create_graph_with_sentences(encoded_sequences: np.ndarray, words_coder: SentencesCoder) -> SSAKG:
     sequence_length = np.shape(encoded_sequences)[1]
     graph_dim = len(words_coder.word_codes)
 

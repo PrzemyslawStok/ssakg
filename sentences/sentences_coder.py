@@ -15,7 +15,7 @@ from numpy.dtypes import StrDType
 
 
 class SentencesCoder:
-    def __init__(self, words_dictionary: [str, int], reserved_symbols_no: int = 0, randomize_symbols=False):
+    def __init__(self, words_dictionary: dict[str, int], reserved_symbols_no: int = 0, randomize_symbols=False):
         self.no_words = len(words_dictionary)
         self.no_symbols = self.no_words + reserved_symbols_no
         self.word_codes = np.zeros(self.no_symbols, dtype=StrDType)
@@ -75,7 +75,7 @@ class SentencesCoder:
             encoded_sentences.append(words)
         return encoded_sentences
 
-    def decode_sentences(self, encoded_sentences: list[list[int]]) -> list[list[str]]:
+    def decode_sentences(self, encoded_sentences: list[np.ndarray | None]) -> list[list[str]]:
         decoded_sentences = []
         for encoded_sentence in encoded_sentences:
             words = []
