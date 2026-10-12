@@ -75,7 +75,11 @@ class ANAKG:
         self.graph = self.crate_graph()
         self.sequences = []
 
-        self.graphs_to_drawing = graphs_to_drawing
+        if self.graph_dim<=15:
+            self.graphs_to_drawing = graphs_to_drawing
+        else:
+            self.graphs_to_drawing = False
+            warnings.warn("Graph dimension must be less than 15. To visualise larger graphs, use the draw_density() function instead.")
 
         # The parameter graph_matrices is only for draw colorfully graph to examples.
         self.graph_matrices = []
@@ -93,8 +97,14 @@ class ANAKG:
 
         temp_graph = np.zeros(self.graph.shape, dtype=self.dtype)
         temp_graph[i:i + self.subgraph_dim, j:j + self.subgraph_dim] = subgraph
+
         if self.graphs_to_drawing:
-            self.graph_matrices.append(temp_graph)
+            if len(self.get_graph()) <= 100:
+                self.graph_matrices.append(temp_graph)
+            else:
+                warnings.warn(
+                    f"100 graphs have already been added to the visualisation. No more graphs will be added. "
+                    f"To visualise larger graphs, use the draw_density() function instead.")
 
         self.graph = self.graph + temp_graph
 
