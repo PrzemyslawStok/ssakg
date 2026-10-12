@@ -79,7 +79,7 @@ class SSAKG(ANAKG):
             Sequences to be inserted into memory.
         """
         self.new_sequences_added = True
-        return super().insert(sequences)
+        return super()._insert(sequences)
 
     def get_sequence_elements(self, context: np.ndarray, context_is_translated=False) -> np.ndarray | None:
 

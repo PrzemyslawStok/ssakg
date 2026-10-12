@@ -157,7 +157,7 @@ class ANAKG:
 
         return new_sequence
 
-    def insert(self, sequences: np.ndarray):
+    def _insert(self, sequences: np.ndarray):
         if np.ndim(sequences) == 1:
             return self.insert_sequence(sequences)
         else:
@@ -167,6 +167,7 @@ class ANAKG:
 
             for sequence in sequences:
                 self.insert_sequence(sequence)
+            return None
 
     def get_subgraph_from_sequence(self, sequence: np.ndarray) -> np.ndarray | None:
         if len(sequence) > self.subgraph_dim:
@@ -200,16 +201,16 @@ class ANAKG:
     def get_graph(self):
         return self.graph
 
-    def create_graph_view(self, to_print=False):
+    def create_graph_view(self):
         graph_view = GraphView()
-        graph_view.graph_from_matrix(np.zeros(self.graph.shape), color="gray", to_print=to_print)
+        graph_view.graph_from_matrix(np.zeros(self.graph.shape), color="gray")
 
         last_matrix = np.zeros(self.graph.shape, dtype=self.dtype)
 
         for graph_matrix in self.graph_matrices:
             last_matrix += graph_matrix
 
-        graph_view.graph_from_matrix(last_matrix, add_empty_nodes=False, color="orange", to_print=to_print)
+        graph_view.graph_from_matrix(last_matrix, add_empty_nodes=False, color="orange")
 
         return graph_view
 
@@ -225,14 +226,14 @@ class ANAKG:
             warnings.warn("Sequences are not stored. Graph view is empty.")
             return
 
-        graph_view = self.create_graph_view(to_print=to_print)
+        graph_view = self.create_graph_view()
         graph_view.draw(title=None, to_print=to_print)
 
     def save_fig(self, title: Tuple[str, str], output_dir: str = None, output_file: str = None, to_print=True):
         if not self.graphs_to_drawing:
             warnings.warn("Sequences are not stored. Graph view is empty.")
 
-        graph_view = self.create_graph_view(to_print=to_print)
+        graph_view = self.create_graph_view()
         graph_view.draw(show=False, output_dir=output_dir, output_file=output_file, title=title, to_print=to_print)
 
     def save_matrix(self, output_dir: str = None, output_file: str = None):
@@ -307,7 +308,7 @@ class ANAKG:
         joint_grid.ax_joint.legend().remove()
 
         if title is not None:
-            joint_grid.fig.suptitle("ssakg - local density")
+            joint_grid.figure.suptitle("ssakg - local density")
 
         if x_label is not None:
             joint_grid.ax_joint.set_xlabel(x_label)
@@ -319,6 +320,6 @@ class ANAKG:
         else:
             joint_grid.ax_joint.set_ylabel("")
 
-        joint_grid.fig.tight_layout()
+        joint_grid.figure.tight_layout()
 
         plot.show()

@@ -9,6 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Tuple
 
 import networkx as nx
 import matplotlib.pyplot as plot
@@ -31,7 +32,7 @@ class GraphView:
 
         self.graph_to_draw = nx.MultiDiGraph()
 
-    def draw(self, title: (str, str) = None, show=True, output_dir: str = None, output_file: str = None,
+    def draw(self, title: Tuple[str, str] = None, show=True, output_dir: str = None, output_file: str = None,
              to_print=False):
         plot.close()
 
@@ -71,13 +72,13 @@ class GraphView:
             plot.box(False)
             plot.savefig(os.path.join(output_dir, output_file))
 
-    def graph_from_matrix(self, matrix: np.array, add_empty_nodes=True, color: str = "yellow", to_print=True):
+    def graph_from_matrix(self, matrix: np.ndarray, add_empty_nodes=True, color: str = "yellow"):
         graph = self.graph_to_draw.copy()
         it = np.nditer(matrix, flags=["multi_index"])
 
         for edges in it:
-            if edges > 0:
-                for i in range(edges):
+            if edges > 0: # type: ignore
+                for i in range(edges): # type: ignore
                     graph.add_edge(it.multi_index[0], it.multi_index[1])
             else:
                 if add_empty_nodes:

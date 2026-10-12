@@ -695,7 +695,7 @@ static PyMethodDef SSAKG_methods[] = {
     {"find_correct_bit", findCorrectBit, METH_VARARGS, "SSAKG C find_correct_bits function"},
     {
         "get_sorted_elements_bits", getSortedElementsBits, METH_VARARGS,
-        "SSAKG C get_unsorted_elements function bits version"
+        "SSAKG C get_sorted_elements_function - only bit based version"
     },
     {NULL, NULL, 0, NULL}
 };

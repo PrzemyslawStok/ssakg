@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 
 
@@ -48,8 +50,8 @@ class SequenceGenerator:
     @staticmethod
     def intersect_2d(array_1: np.ndarray, array_2: np.ndarray) -> np.ndarray:
         n_cols = array_1.shape[1]
-        dtype = {'names': ['f{}'.format(i) for i in range(n_cols)],
-                 'formats': n_cols * [array_1.dtype]}
+        dtype = np.dtype({'names': ['f{}'.format(i) for i in range(n_cols)],
+                          'formats': n_cols * [array_1.dtype]})
 
         intersection = np.intersect1d(array_1.view(dtype), array_2.view(dtype))
         intersection = intersection.view(array_1.dtype).reshape(-1, n_cols)
@@ -59,15 +61,15 @@ class SequenceGenerator:
     @staticmethod
     def setdiff_2d(array_1: np.ndarray, array_2: np.ndarray) -> np.ndarray:
         n_cols = array_1.shape[1]
-        dtype = {'names': ['f{}'.format(i) for i in range(n_cols)],
-                 'formats': n_cols * [array_1.dtype]}
+        dtype = np.dtype({'names': ['f{}'.format(i) for i in range(n_cols)],
+                          'formats': n_cols * [array_1.dtype]})
 
         difference = np.setdiff1d(array_1.view(dtype), array_2.view(dtype))
         difference = difference.view(array_1.dtype).reshape(-1, n_cols)
 
         return difference
 
-    def add_unique_sequences(self, number_sequences=1) -> (np.ndarray, np.ndarray):
+    def add_unique_sequences(self, number_sequences=1) -> Tuple[np.ndarray, np.ndarray]:
         number_to_add = number_sequences
         number_added = 0
 
