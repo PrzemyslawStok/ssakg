@@ -7,7 +7,7 @@ name = "ssakg"
 version = "1.0.0"
 description = "Sequential Structural Associative Knowledge Graph (ssakg)"
 readme = "README_PYPI.md"
-requires-python = ">=3.10,<=3.12.7"
+requires-python = ">=3.10,<3.13"
 license = { text = "Apache 2.0" }
 authors = [
     { name = "Przemysław Stokłosa", email = "przemyslaw.stoklosa@gmail.com" }
