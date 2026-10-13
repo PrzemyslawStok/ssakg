@@ -148,14 +148,14 @@ class ANAKG:
 
     def _insert(self, sequences: np.ndarray):
         if np.ndim(sequences) == 1:
-            return self.insert_sequence(sequences)
+            return self._insert_sequence(sequences)
         else:
             dims_to_add = self.__reserve_symbol_names(sequences)
             if dims_to_add > 0:
                 self.__add_dim_to_graph(dims_to_add)
 
             for sequence in sequences:
-                self.insert_sequence(sequence)
+                self._insert_sequence(sequence)
             return None
 
     def get_subgraph_from_sequence(self, sequence: np.ndarray) -> np.ndarray | None:
