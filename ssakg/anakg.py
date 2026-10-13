@@ -242,6 +242,22 @@ class ANAKG:
         self.graph_matrices = []
 
     def draw_density(self, title=None, x_label=None, y_label=None, circle_size: int = 2, bins="auto"):
+        """Plot the density distribution.
+
+        Parameters
+        ----------
+        title : str or None, optional
+            Title of the plot.
+        x_label : str or None, optional
+            Label for the x-axis.
+        y_label : str or None, optional
+            Label for the y-axis.
+        circle_size : int, default=2
+            Size of the circles used in the plot.
+        bins : str or int or sequence, default="auto"
+            Number of bins or binning strategy used to calculate the histogram.
+            The default value, "auto", automatically determines the bin edges.
+        """
         dim = self.graph_dim
 
         graph_1d = self.graph.reshape(dim * dim)
