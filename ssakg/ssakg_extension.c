@@ -284,9 +284,7 @@ static PyObject *find_correct_bit_base(const PyArrayObject *array_object, const 
     Py_DECREF(bits_mask_object);
 
     PyObject *bit_max = PyArray_ArgMax(bits_no_object, 0, NULL);
-
     Py_DECREF(bits_no_object);
-    // printf("bit_max: %lu\n", PyLong_AsLongLong(bit_max));
 
     return bit_max;
 }
@@ -627,8 +625,6 @@ static PyObject *getSortedElementsBits(PyObject *self, PyObject *args) {
     const npy_intp graph_cols_no = PyArray_SHAPE(graph)[1];
     const npy_intp context_length = PyArray_SHAPE(context)[0];
 
-    // const PyArrayObject *context_1 = (PyArrayObject *) PyArray_CastToType((PyArrayObject *) context,
-    //                                                          PyArray_DescrNewFromType(NPY_UINT32), 0);
 
     const npy_intp *context_array = PyArray_DATA(context);
     const char *graph_array = PyArray_DATA(graph);
@@ -664,16 +660,11 @@ static PyObject *getSortedElementsBits(PyObject *self, PyObject *args) {
     const PyArrayObject *filtered_sequence_matrix = filtered_array(sequence_matrix, stride, filtered_non_zeros_no,
                                                                    filtered_non_zeros_no);
 
-    // print_array_stride(filtered_sequence_matrix, stride);
-
     const PyArrayObject *sorted_indices = get_sorted_indices_from_first_column(
         PyArray_DATA(filtered_sequence_matrix), stride, filtered_non_zeros_no, filtered_non_zeros_no);
 
     const PyArrayObject *sorted_sequence = array_from_indices(PyArray_DATA(filtered_indices),
                                                               PyArray_DATA(sorted_indices), filtered_non_zeros_no);
-    // print_array(sorted_sequence);
-    // print_array_1d(sorted_sequence);
-
     Py_DECREF(non_zeros_object);
     Py_DECREF(sorted_indices);
     Py_DECREF(filtered_limited_graph);

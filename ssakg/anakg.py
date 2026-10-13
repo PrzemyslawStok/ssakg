@@ -10,7 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 from typing import Tuple
 
 import numpy as np
@@ -22,10 +21,8 @@ import seaborn as sns
 
 import matplotlib.pyplot as plot
 
-from ssakg.anakg_view import GraphView, create_dir
+from ssakg.anakg_view import _GraphView
 from ssakg.sequence_translator import SequenceTranslator
-
-from tabulate import tabulate
 
 from ssakg.subgraph_patterns import SubgraphPatterns
 
@@ -129,7 +126,7 @@ class ANAKG:
 
         return total_dims_to_add
 
-    def insert_sequence(self, sequence: np.ndarray) -> np.ndarray | None:
+    def _insert_sequence(self, sequence: np.ndarray) -> np.ndarray | None:
         if len(sequence) != self.subgraph_dim:
             warnings.warn(f"Sequence has incorrect length {len(sequence)}. Subgraph not inserted.")
             return None
@@ -191,7 +188,7 @@ class ANAKG:
         return self.graph
 
     def __create_graph_view(self):
-        graph_view = GraphView()
+        graph_view = _GraphView()
         graph_view.graph_from_matrix(np.zeros(self.graph.shape), color="gray")
 
         last_matrix = np.zeros(self.graph.shape, dtype=self.dtype)

@@ -40,7 +40,6 @@ class SSAKG(ANAKG):
         """
         super().__init__(number_of_symbols, sequence_length, graphs_to_drawing, bit_based, dtype)
 
-        self.new_sequences_added = False
         self.bit_based = bit_based
 
     def get_sequence(self, context):
@@ -67,8 +66,7 @@ class SSAKG(ANAKG):
         np.ndarray or None
             The result of the insertion, if applicable; otherwise, None.
         """
-        self.new_sequences_added = True
-        return super().insert_sequence(sequence)
+        return super()._insert_sequence(sequence)
 
     def insert(self, sequences: np.ndarray | list) -> np.ndarray | None:
         """Insert multiple sequences into associated memory.
@@ -78,7 +76,6 @@ class SSAKG(ANAKG):
         sequences : np.ndarray
             Sequences to be inserted into memory.
         """
-        self.new_sequences_added = True
         return super()._insert(sequences)
 
     def get_sequence_elements(self, context: np.ndarray, context_is_translated=False) -> np.ndarray | None:

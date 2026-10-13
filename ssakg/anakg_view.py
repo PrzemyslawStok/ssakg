@@ -26,7 +26,7 @@ def create_dir(dir_name: str):
         os.makedirs(dir_name)
 
 
-class GraphView:
+class _GraphView:
     def __init__(self):
         self.sub_graphs = []
 
@@ -83,14 +83,6 @@ class GraphView:
             else:
                 if add_empty_nodes:
                     graph.add_node(it.multi_index[0])
-
-        self.sub_graphs.append((graph, color))
-
-    def graph_from_edges(self, edges: list[list[int]], color: str = "yellow"):
-        graph = self.graph_to_draw.copy()
-
-        for edge in edges:
-            graph.add_edge(edge[0], edge[1])
 
         self.sub_graphs.append((graph, color))
 

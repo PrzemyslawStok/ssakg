@@ -3,7 +3,7 @@ import numpy as np
 
 class SubgraphPatterns:
     @staticmethod
-    def create_upper_triangular(dim: int, dtype=np.uint16) -> np.array:
+    def create_upper_triangular(dim: int, dtype=np.uint16) -> np.ndarray:
 
         array = np.ones([dim, dim], dtype=dtype)
         mul = np.arange(1, dim + 1, dtype=dtype)
@@ -14,7 +14,7 @@ class SubgraphPatterns:
         return upper_triangular_matrix
 
     @staticmethod
-    def create_square(dim: int, remove_diagonals=False, weighted_edges=False, dtype=np.int16) -> np.array:
+    def create_square(dim: int, remove_diagonals=False, weighted_edges=False, dtype=np.int16) -> np.ndarray:
         if weighted_edges:
             mul = np.arange(1, dim + 1, dtype=dtype)
         else:
@@ -33,7 +33,7 @@ class SubgraphPatterns:
         return numbers_to_set
 
     @staticmethod
-    def bits_upper_triangular(dim: int, dtype=np.int16) -> np.array:
+    def bits_upper_triangular(dim: int, dtype=np.int16) -> np.ndarray:
         bits_mul = np.zeros([dim, dim], dtype=dtype)
         for no_bit in range(dim):
             bits_mul[no_bit] = SubgraphPatterns.set_bit(bits_mul[no_bit], no_bit)
@@ -44,7 +44,7 @@ class SubgraphPatterns:
         return upper_triangular_matrix * bits_mul
 
     @staticmethod
-    def bits_square(dim: int, dtype=np.int16) -> np.array:
+    def bits_square(dim: int, dtype=np.int16) -> np.ndarray:
         bits_mul = np.zeros([dim, dim], dtype=dtype)
         for no_bit in range(dim):
             bits_mul[no_bit] = SubgraphPatterns.set_bit(bits_mul[no_bit], no_bit)
