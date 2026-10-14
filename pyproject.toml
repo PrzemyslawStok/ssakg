@@ -32,7 +32,7 @@ dependencies = [
     "jinja2~=3.1.6",
 ]
 keywords = [
-    "semantic memory",§
+    "semantic memory",
     "structural graphs",
     "graph density",
     "sequence storage",
