@@ -683,7 +683,6 @@ static PyObject *getSortedElementsBits(PyObject *self, PyObject *args) {
 
 static PyMethodDef SSAKG_methods[] = {
     {"get_unsorted_elements", get_unsorted_elements, METH_VARARGS, "SSAKG C get_unsorted_elements function"},
-    {"find_correct_bit", findCorrectBit, METH_VARARGS, "SSAKG C find_correct_bits function"},
     {
         "get_sorted_elements_bits", getSortedElementsBits, METH_VARARGS,
         "SSAKG C get_sorted_elements_function - only bit based version"

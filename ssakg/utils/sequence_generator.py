@@ -1,7 +1,17 @@
+# Copyright 2024 The SSAKG Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from typing import Tuple
-
 import numpy as np
-
 
 class SequenceGenerator:
     def __init__(self, sequence_length, sequence_min: int, sequence_max: int, dtype=np.uint32, seed=None):
@@ -17,20 +27,16 @@ class SequenceGenerator:
         else:
             self.rng = np.random.default_rng(seed=seed)
 
-    def __generate_new_sequences(self, number_sequences: int = 1, unique_elements=False) -> np.ndarray:
-        rng = self.rng
-
-        if unique_elements:
-            sequences = np.zeros((number_sequences, self.sequence_length), dtype=self.dtype)
-            for i in range(number_sequences):
-                sequences[i] = rng.choice(self.sequence_max - self.sequence_min,
-                                          size=self.sequence_length, replace=False) + self.sequence_min
-        else:
-            sequences = rng.integers(self.sequence_min, self.sequence_max,
-                                     size=(number_sequences, self.sequence_length), dtype=self.dtype)
-        return sequences
-
     def generate_unique_sequences(self, number_sequences=1, unique_elements=False) -> np.ndarray:
+        """Generate unique sequences for testing.
+
+        Parameters
+        ----------
+        number_sequences : int, default=1
+            Number of unique sequences to generate.
+        unique_elements : bool, default=False
+            Whether to require all elements within each sequence to be unique.
+        """
         number_to_add = number_sequences
         number_added = 0
         added_sequences = np.empty((0, self.sequence_length), dtype=self.dtype)
@@ -46,6 +52,19 @@ class SequenceGenerator:
             self.unique_sequences = np.append(self.unique_sequences, added_sequences, axis=0)
 
         return added_sequences
+
+    def __generate_new_sequences(self, number_sequences: int = 1, unique_elements=False) -> np.ndarray:
+        rng = self.rng
+
+        if unique_elements:
+            sequences = np.zeros((number_sequences, self.sequence_length), dtype=self.dtype)
+            for i in range(number_sequences):
+                sequences[i] = rng.choice(self.sequence_max - self.sequence_min,
+                                          size=self.sequence_length, replace=False) + self.sequence_min
+        else:
+            sequences = rng.integers(self.sequence_min, self.sequence_max,
+                                     size=(number_sequences, self.sequence_length), dtype=self.dtype)
+        return sequences
 
     @staticmethod
     def intersect_2d(array_1: np.ndarray, array_2: np.ndarray) -> np.ndarray:

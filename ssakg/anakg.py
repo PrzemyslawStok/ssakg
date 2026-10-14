@@ -82,6 +82,98 @@ class ANAKG:
         # The parameter graph_matrices is only for draw colorfully graph to examples.
         self.graph_matrices = []
 
+    def show(self, to_print=False):
+        """Display the associative memory graph.
+
+        Parameters
+        ----------
+        to_print : bool, default=False
+            Whether to generate a higher-resolution graph suitable for printing.
+        """
+        if not self.graphs_to_drawing:
+            warnings.warn("Sequences are not stored. Graph view is empty.")
+            return
+
+        graph_view = self.__create_graph_view()
+        graph_view.draw(title=None, to_print=to_print)
+
+    def save_fig(self, title: Tuple[str, str] | None, output_dir: str = None, output_file: str = None, to_print=True):
+        """Save the associative memory graph to a file.
+
+        Parameters
+        ----------
+        title : tuple[str, str] or None
+            Optional figure title and caption.
+        output_dir : str or None, optional
+            Directory where the figure will be saved.
+        output_file : str or None, optional
+            Name of the output file.
+        to_print : bool, default=True
+            Whether to generate a higher-resolution figure suitable for printing.
+        """
+        if not self.graphs_to_drawing:
+            warnings.warn("Sequences are not stored. Graph view is empty.")
+
+        graph_view = self.__create_graph_view()
+        graph_view.draw(show=False, output_dir=output_dir, output_file=output_file, title=title, to_print=to_print)
+
+    def draw_density(self, title=None, x_label=None, y_label=None, circle_size: int = 2, bins="auto"):
+        """Plot the density distribution.
+
+        Parameters
+        ----------
+        title : str or None, optional
+            Title of the plot.
+        x_label : str or None, optional
+            Label for the x-axis.
+        y_label : str or None, optional
+            Label for the y-axis.
+        circle_size : int, default=2
+            Size of the circles used in the plot.
+        bins : str or int or sequence, default="auto"
+            Number of bins or binning strategy used to calculate the histogram.
+            The default value, "auto", automatically determines the bin edges.
+        """
+        dim = self.graph_dim
+
+        graph_1d = self.graph.reshape(dim * dim)
+
+        non_zeros = np.nonzero(graph_1d)[0]
+        x = np.mod(non_zeros, dim)
+        y = np.floor_divide(non_zeros, dim)
+        non_zeros_values = graph_1d[non_zeros]
+
+        dataframe = pd.DataFrame({"x": x, "y": y, "z": non_zeros_values})
+
+        if bins == "auto":
+            if dim > 1000:
+                dataframe = self.__rebin_dataframe(dataframe, n_bins=500, n_hue_bins=20)
+        elif type(bins) == int:
+            dataframe = self.__rebin_dataframe(dataframe, n_bins=int(bins), n_hue_bins=20)
+
+        palette = sns.color_palette("dark:#5A9_r", as_cmap=True)
+        joint_grid = sns.JointGrid(data=dataframe, x="x", y="y", hue="z", palette=palette)
+        joint_grid.plot_joint(sns.scatterplot, s=circle_size)
+        joint_grid.plot_marginals(sns.histplot, bins=min(int(dim / 2), 100))
+        joint_grid.ax_joint.legend().remove()
+
+        if title is not None:
+            joint_grid.figure.suptitle("ssakg - local density")
+
+        if x_label is not None:
+            joint_grid.ax_joint.set_xlabel(x_label)
+        else:
+            joint_grid.ax_joint.set_xlabel("")
+
+        if y_label is not None:
+            joint_grid.ax_joint.set_ylabel(y_label)
+        else:
+            joint_grid.ax_joint.set_ylabel("")
+
+        joint_grid.figure.tight_layout()
+
+        plot.show()
+
     def __crate_graph(self):
         dim = self.graph_dim
 
@@ -207,21 +299,6 @@ class ANAKG:
 
         return m / n / (n - 1)
 
-    def show(self, to_print=False):
-        if not self.graphs_to_drawing:
-            warnings.warn("Sequences are not stored. Graph view is empty.")
-            return
-
-        graph_view = self.__create_graph_view()
-        graph_view.draw(title=None, to_print=to_print)
-
-    def save_fig(self, title: Tuple[str, str] | None, output_dir: str = None, output_file: str = None, to_print=True):
-        if not self.graphs_to_drawing:
-            warnings.warn("Sequences are not stored. Graph view is empty.")
-
-        graph_view = self.__create_graph_view()
-        graph_view.draw(show=False, output_dir=output_dir, output_file=output_file, title=title, to_print=to_print)
-
     def translate_sequence(self, sequence: np.ndarray):
         return self.sequence_translator.translate_sequence(sequence, add_to_dictionary=False)[0]
 
@@ -240,63 +317,6 @@ class ANAKG:
         self.sequence_translator = SequenceTranslator(no_unique_symbols=self.graph_dim,
                                                       sequence_length=self.subgraph_dim, dtype=self.dtype)
         self.graph_matrices = []
-
-    def draw_density(self, title=None, x_label=None, y_label=None, circle_size: int = 2, bins="auto"):
-        """Plot the density distribution.
-
-        Parameters
-        ----------
-        title : str or None, optional
-            Title of the plot.
-        x_label : str or None, optional
-            Label for the x-axis.
-        y_label : str or None, optional
-            Label for the y-axis.
-        circle_size : int, default=2
-            Size of the circles used in the plot.
-        bins : str or int or sequence, default="auto"
-            Number of bins or binning strategy used to calculate the histogram.
-            The default value, "auto", automatically determines the bin edges.
-        """
-        dim = self.graph_dim
-
-        graph_1d = self.graph.reshape(dim * dim)
-
-        non_zeros = np.nonzero(graph_1d)[0]
-        x = np.mod(non_zeros, dim)
-        y = np.floor_divide(non_zeros, dim)
-        non_zeros_values = graph_1d[non_zeros]
-
-        dataframe = pd.DataFrame({"x": x, "y": y, "z": non_zeros_values})
-
-        if bins == "auto":
-            if dim > 1000:
-                dataframe = self.__rebin_dataframe(dataframe, n_bins=500, n_hue_bins=20)
-        elif type(bins) == int:
-            dataframe = self.__rebin_dataframe(dataframe, n_bins=int(bins), n_hue_bins=20)
-
-        palette = sns.color_palette("dark:#5A9_r", as_cmap=True)
-        joint_grid = sns.JointGrid(data=dataframe, x="x", y="y", hue="z", palette=palette)
-        joint_grid.plot_joint(sns.scatterplot, s=circle_size)
-        joint_grid.plot_marginals(sns.histplot, bins=min(int(dim / 2), 100))
-        joint_grid.ax_joint.legend().remove()
-
-        if title is not None:
-            joint_grid.figure.suptitle("ssakg - local density")
-
-        if x_label is not None:
-            joint_grid.ax_joint.set_xlabel(x_label)
-        else:
-            joint_grid.ax_joint.set_xlabel("")
-
-        if y_label is not None:
-            joint_grid.ax_joint.set_ylabel(y_label)
-        else:
-            joint_grid.ax_joint.set_ylabel("")
-
-        joint_grid.figure.tight_layout()
-
-        plot.show()
 
     @staticmethod
     def __rebin_dataframe(dataframe: pd.DataFrame, n_bins: int = 50, n_hue_bins=None) -> pd.DataFrame:
