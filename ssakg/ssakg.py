@@ -9,26 +9,76 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Tuple
 
 import numpy as np
 import warnings
 
 from ssakg.anakg import ANAKG
-from ssakg.ordering_algorithms import OrderingAlgorithm, WeightedEdgesNodeOrderingAlgorithm
+from ssakg.ordering_algorithms import OrderingAlgorithm, WeightedEdgesNodeOrderingAlgorithm, BitBasedSort
 
 import ssakg_extension as ssakg_ext
 
 
 class SSAKG(ANAKG):
-    def __init__(self, number_of_symbols: int = 10, sequence_length: int = 5, dtype=np.uint16, graphs_to_drawing=False,
-                 remove_diagonals=True, weighted_edges=True):
-        super().__init__(number_of_symbols, sequence_length, dtype, graphs_to_drawing, remove_diagonals,
-                         weighted_edges)
+    def __init__(self, number_of_symbols: int = 10, sequence_length: int = 5, dtype=None, graphs_to_drawing=False,
+                 bit_based=False):
+        """Initialize the associative memory.
 
-        self.new_sequences_added = False
+        Parameters
+        ----------
+        number_of_symbols : int, default=10
+            Number of distinct symbols used by the associative memory.
+        sequence_length : int, default=5
+            Length of the sequences stored in memory.
+        bit_based : bool, default=False
+            Whether to use the bit-based memory algorithm instead of the standard algorithm.
+        graphs_to_drawing : bool, default=False
+            Whether to enable graph visualization (only for small memory instances max 15 symbols and max 100 graphs).
+        dtype : optional
+            Data type used for the memory representation.
+        """
+        super().__init__(number_of_symbols, sequence_length, graphs_to_drawing, bit_based, dtype)
 
-    def get_unsorted_elements(self, context: np.ndarray, context_is_translated=False) -> (
-            np.ndarray, np.ndarray):
+        self.bit_based = bit_based
+
+    def get_sequence(self, context):
+        """Retrieve a sequence from memory using the given context.
+
+        Parameters
+        ----------
+        context : ...
+            Context used to retrieve the sequence from memory.
+        """
+        context = self.sequence_from_placeholders(context)
+        return self.__get_sequence(context, decode_sequence=True, context_is_translated=True)
+
+    def insert_sequence(self, sequence: np.ndarray | list) -> np.ndarray | None:
+        """Insert a single sequence into associated memory.
+
+        Parameters
+        ----------
+        sequence : np.ndarray
+            Sequence to be inserted into memory.
+
+        Returns
+        -------
+        np.ndarray or None
+            The result of the insertion, if applicable; otherwise, None.
+        """
+        return super()._insert_sequence(sequence)
+
+    def insert(self, sequences: np.ndarray | list) -> np.ndarray | None:
+        """Insert multiple sequences into associated memory.
+
+        Parameters
+        ----------
+        sequences : np.ndarray
+            Sequences to be inserted into memory.
+        """
+        return super()._insert(sequences)
+
+    def get_sequence_elements(self, context: np.ndarray, context_is_translated=False) -> np.ndarray | None:
 
         if context_is_translated:
             translated_context = context
@@ -36,46 +86,43 @@ class SSAKG(ANAKG):
             if len(unique_context) != len(context):
                 warnings.warn(
                     "List of symbols contains duplicate elements. Please use underscored symbols instead e.g. \"5_2\".")
-                return None, None
+                return None
         else:
             translated_context = self.translate_context(context)
 
         if translated_context is None:
-            return None, None
-
-        return ssakg_ext.get_unsorted_elements(self.graph, translated_context.astype(dtype=np.uint32)), []
-
-    def __get_sequence(self, context: np.ndarray, decode_sequence=True, context_is_translated=False,
-                       ordering_alg=WeightedEdgesNodeOrderingAlgorithm()) -> np.ndarray | list:
-
-        unsorted_elements, _ = self.get_unsorted_elements(context, context_is_translated)
-        if unsorted_elements is None:
             return None
 
-        sorted_elements, _ = self.order_sequence(unsorted_elements, ordering_alg=ordering_alg,
+        if self.bit_based:
+            # The bit-based algorithm always produces sorted elements (called bits sort).
+            # One can also use unsorted elements to test the external sorting function.
+            sequence_elements, _ = ssakg_ext.get_sorted_elements_bits(self.graph,
+                                                                      context.astype(np.uintp))
+            return sequence_elements
+        else:
+            # The data from published works (up to version ssakg 1.0) can be reproduced using an earlier version of the algorithm.
+            sequence_elements = ssakg_ext.get_unsorted_elements(self.graph, translated_context.astype(
+                dtype=np.uint32))
+            return sequence_elements
+
+    def __get_sequence(self, context: np.ndarray, decode_sequence=True,
+                       context_is_translated=False) -> np.ndarray | None:
+
+        if not self.bit_based:
+            ordering_alg = WeightedEdgesNodeOrderingAlgorithm()
+        else:
+            ordering_alg = BitBasedSort()
+
+        sequence_elements = self.get_sequence_elements(context, context_is_translated)
+
+        if sequence_elements is None:
+            return None
+        sorted_elements, _ = self.order_sequence(sequence_elements, ordering_alg=ordering_alg,
                                                  use_only_first_path=True)
-        if sorted_elements is None:
-            sorted_elements = unsorted_elements
-
-        if sorted_elements is None:
-            sorted_elements = unsorted_elements
-
         if decode_sequence:
             return self.decode_sequence(sorted_elements)
 
         return sorted_elements
-
-    def get_sequence(self, context):
-        context = self.sequence_from_placeholders(context)
-        return self.__get_sequence(context, decode_sequence=True, context_is_translated=True)
-
-    def insert_sequence(self, sequence: np.ndarray) -> np.ndarray | None:
-        self.new_sequences_added = True
-        return super().insert_sequence(sequence)
-
-    def insert(self, sequences: np.ndarray):
-        self.new_sequences_added = True
-        return super().insert(sequences)
 
     @staticmethod
     def context_from_sequence(context_length: int, sequence: np.ndarray) -> np.ndarray:
@@ -86,7 +133,7 @@ class SSAKG(ANAKG):
         return context_array
 
     @staticmethod
-    def compare_sorted_sequences(sequence_1: np.ndarray, sequence_2: np.ndarray) -> (bool, np.ndarray):
+    def compare_sorted_sequences(sequence_1: np.ndarray, sequence_2: np.ndarray) -> Tuple[bool, np.ndarray]:
         agreement = np.zeros(len(sequence_1), dtype=np.int8)
 
         if sequence_1 is None or sequence_2 is None:
@@ -110,19 +157,19 @@ class SSAKG(ANAKG):
             sequence_2 = np.sort(sequence_2)
 
             if not np.array_equal(sequence_1, sequence_2):
-                print("ssakg: different sequences")
                 return False
 
             return True
 
     def order_sequence(self, sequence: np.ndarray, ordering_alg: OrderingAlgorithm | None = None,
-                       use_only_first_path=False) -> (
-            np.ndarray | None, int):
-        sequence_matrix = self.get_subgraph_from_sequence(sequence)
-        if sequence_matrix is None:
-            return None, 0
+                       use_only_first_path=False) -> Tuple[
+        np.ndarray | None, int]:
 
-        orderings = ordering_alg(sequence_array=sequence_matrix, use_only_first_path=use_only_first_path)
+        orderings = ordering_alg(self, sequence=sequence,
+                                 use_only_first_path=use_only_first_path)
+
+        if orderings is None:
+            return None, 0
 
         new_ordering = orderings[0]
         sorted_sequence = sequence[new_ordering]

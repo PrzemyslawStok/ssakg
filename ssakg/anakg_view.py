@@ -9,6 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Tuple
 
 import networkx as nx
 import matplotlib.pyplot as plot
@@ -25,13 +26,13 @@ def create_dir(dir_name: str):
         os.makedirs(dir_name)
 
 
-class GraphView:
+class _GraphView:
     def __init__(self):
         self.sub_graphs = []
 
         self.graph_to_draw = nx.MultiDiGraph()
 
-    def draw(self, title: (str, str) = None, show=True, output_dir: str = None, output_file: str = None,
+    def draw(self, title: Tuple[str, str] = None, show=True, output_dir: str = None, output_file: str = None,
              to_print=False):
         plot.close()
 
@@ -51,7 +52,7 @@ class GraphView:
             sg = graph.subgraph(subgraph.nodes())
 
             if to_print:
-                nx.draw_networkx(sg, node_size=1000, font_size=20, with_labels=True,
+                nx.draw_networkx(sg, node_size=2000, font_size=30, with_labels=True,
                                  pos=positions, node_color=color, width=5.5, connectionstyle="arc3, rad = 0.1")
             else:
                 nx.draw_networkx(sg, with_labels=True,
@@ -71,29 +72,17 @@ class GraphView:
             plot.box(False)
             plot.savefig(os.path.join(output_dir, output_file))
 
-    def graph_from_matrix(self, matrix: np.array, add_empty_nodes=True, color: str = "yellow", to_print=True):
+    def graph_from_matrix(self, matrix: np.ndarray, add_empty_nodes=True, color: str = "yellow"):
         graph = self.graph_to_draw.copy()
         it = np.nditer(matrix, flags=["multi_index"])
-        if to_print:
-            renumber_nodes = 1
-        else:
-            renumber_nodes = 0
 
         for edges in it:
-            if edges > 0:
-                for i in range(edges):
-                    graph.add_edge(it.multi_index[0] + renumber_nodes, it.multi_index[1] + renumber_nodes)
+            if edges > 0: # type: ignore
+                for i in range(edges): # type: ignore
+                    graph.add_edge(it.multi_index[0], it.multi_index[1])
             else:
                 if add_empty_nodes:
-                    graph.add_node(it.multi_index[0] + renumber_nodes)
-
-        self.sub_graphs.append((graph, color))
-
-    def graph_from_edges(self, edges: list[list[int]], color: str = "yellow"):
-        graph = self.graph_to_draw.copy()
-
-        for edge in edges:
-            graph.add_edge(edge[0], edge[1])
+                    graph.add_node(it.multi_index[0])
 
         self.sub_graphs.append((graph, color))
 

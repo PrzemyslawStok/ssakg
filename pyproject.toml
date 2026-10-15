@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ssakg"
-version = "1.0.0"
+version = "2.0.0b7"
 description = "Sequential Structural Associative Knowledge Graph (ssakg)"
 readme = "README_PYPI.md"
 requires-python = ">=3.10,<3.13"
@@ -27,7 +27,9 @@ dependencies = [
     "pandas~=2.2.0",
     "tabulate~=0.9.0",
     "PyPrind~=2.11.3",
-    "seaborn~=0.13.2"
+    "seaborn~=0.13.2",
+    # Jinja2 is bundled as a core dependency to ensure seamless DataFrame rendering within Jupyter Notebooks
+    "jinja2~=3.1.6",
 ]
 keywords = [
     "semantic memory",

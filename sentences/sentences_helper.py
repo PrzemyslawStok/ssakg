@@ -9,6 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Tuple
 
 import numpy as np
 from nltk import word_tokenize
@@ -16,7 +17,7 @@ from nltk import word_tokenize
 from nltk import FreqDist
 
 
-def compute_statistics(sentences_split) -> (np.ndarray, np.ndarray):
+def compute_statistics(sentences_split) -> Tuple[np.ndarray, np.ndarray]:
     sentences_data = np.zeros(len(sentences_split), dtype=int)
 
     for i in range(len(sentences_split)):
@@ -32,12 +33,13 @@ def compute_statistics(sentences_split) -> (np.ndarray, np.ndarray):
     return sentences_data, sentences_histo
 
 
-def create_word_histo(dictionary: dict[str, int]) -> (np.ndarray, np.ndarray):
+def create_word_histo(dictionary: dict[str, int]) -> Tuple[np.ndarray, np.ndarray]:
     words_histo = np.zeros(len(dictionary), dtype=int)
     words_data = []
 
     sorted_values = np.flip(np.sort(list(dictionary.values())))
 
+    words_counter: int
     for i, words_counter in enumerate(sorted_values):
         words_histo[i] = words_counter
 

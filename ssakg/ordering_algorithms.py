@@ -10,14 +10,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TYPE_CHECKING
 import numpy as np
 
+if TYPE_CHECKING:
+    from ssakg.ssakg import SSAKG
 
 class OrderingAlgorithm:
     def __init__(self, dtype=np.int16):
         self.dtype = dtype
 
-    def __call__(self, sequence_array: np.ndarray, use_only_first_path=False):
+    def __call__(self, ssakg: 'SSAKG', sequence: np.ndarray, use_only_first_path=False):
+        sequence_array = ssakg.get_subgraph_from_sequence(sequence)
+        if sequence_array is None:
+            return None
+
         all_paths = self.__ordering_algorithm(sequence_array, [], [], max_index=len(sequence_array) + 1,
                                               use_only_first_path=use_only_first_path)
         new_paths = []
@@ -51,7 +58,7 @@ class OrderingAlgorithm:
 
         return new_path
 
-    def __ordering_algorithm(self, array: np.array, path: list, all_paths: list,
+    def __ordering_algorithm(self, array: np.ndarray, path: list, all_paths: list,
                              max_index=None, use_only_first_path=False):
         if len(array) == 0:
             all_paths.append(path)
@@ -84,6 +91,34 @@ class OrderingAlgorithm:
         return all_paths
 
 
+class BitBasedSort(OrderingAlgorithm):
+    # The bit-based algorithm have built-in sort function.
+    def __call__(self, ssakg: 'SSAKG', sequence: np.ndarray, use_only_first_path=False):
+        # The sequence is sorted, so the function returns consecutive indices starting from 1.
+        return [np.arange(len(sequence))]
+
+    def __str__(self):
+        return "Bit based sort"
+
+
+class BitBasedSortDummy(BitBasedSort):
+    def __init__(self, random_sort_percentage=10, dtype=np.uint16):
+        super().__init__(dtype)
+        self.random_sort_percentage = random_sort_percentage
+
+    # The bit-based algorithm have built-in sort function, this is only for test purpose.
+    def __call__(self, ssakg: 'SSAKG', sequence: np.ndarray, use_only_first_path=False):
+        # The sequence is sorted, so the function returns consecutive indices starting from 1.
+        rnd = np.random.random()
+        if rnd < self.random_sort_percentage / 100.0:
+            np.random.shuffle(sequence)
+
+        return [np.arange(len(sequence))]
+
+    def __str__(self):
+        return f"Bit based sort test error {self.random_sort_percentage}%"
+
+
 class NodeOrderingAlgorithm(OrderingAlgorithm):
     def _ordering_function(self, array: np.ndarray, max_index: int):
         return OrderingAlgorithm.find_indexes_with_min_zeros_count(array)
@@ -93,10 +128,15 @@ class NodeOrderingAlgorithm(OrderingAlgorithm):
 
 
 class SimpleSort(NodeOrderingAlgorithm):
-    def __call__(self, sequence_array: np.ndarray, use_only_first_path=False):
+    def __call__(self, ssakg: 'SSAKG', sequence: np.ndarray, use_only_first_path=False):
+        sequence_array = ssakg.get_subgraph_from_sequence(sequence)
+        if sequence_array is None:
+            return None
+
         return self.__sort(sequence_array)
 
-    def __sort(self, sequence_array: np.ndarray) -> list:
+    @staticmethod
+    def __sort(sequence_array: np.ndarray) -> list:
         only_zeros = np.where(sequence_array == 0, 1, 0)
         number_zeros_in_columns = np.sum(only_zeros, axis=1)
 
@@ -109,10 +149,11 @@ class SimpleSort(NodeOrderingAlgorithm):
 
 
 class SimpleSortWeighted(NodeOrderingAlgorithm):
-    def __call__(self, sequence_array: np.ndarray, use_only_first_path=False):
-        return self.__sort(sequence_array)
+    def __call__(self, ssakg: 'SSAKG', sequence: np.ndarray, use_only_first_path=False):
+        return SimpleSortWeighted.__sort(sequence)
 
-    def __sort(self, sequence_array: np.ndarray) -> list:
+    @staticmethod
+    def __sort(sequence_array: np.ndarray) -> list:
         weight_row_sum = SimpleSortWeighted.create_wight_array_row_sum(sequence_array)
 
         only_zeros = np.where(sequence_array == 0, 1, 0)
@@ -174,8 +215,6 @@ class WeightedEdgesNodeOrderingAlgorithm(OrderingAlgorithm):
             return np.array([])
 
         correct_number = max_index - len(array)
-
-        # !? this code can contain error
 
         max_index_array = indices_with_no_zeros
 

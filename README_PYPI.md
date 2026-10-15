@@ -11,7 +11,7 @@ The context contains random sequence elements. The elements of the context are n
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install ssakg.
 
 ```bash
-pip install ssakg
+pip install ssakg --pre
 ```
 
 ## Usage
@@ -34,6 +34,8 @@ Examples of the use of the program:
 [Basics](https://github.com/PrzemyslawStok/ssakg/blob/main/examples/ssakg_basic.ipynb)\
 [Reading sequences](https://github.com/PrzemyslawStok/ssakg/blob/main/examples/ssakg_reading.ipynb)  
 [SSAKG memory](https://github.com/PrzemyslawStok/ssakg/blob/main/examples/ssakg_tests.ipynb)  
+
+[Bit-based example](https://github.com/PrzemyslawStok/ssakg/blob/main/examples/bit_based_example.ipynb)
 
 [miRNA example](https://github.com/PrzemyslawStok/ssakg/blob/main/microrna/mirna_example.ipynb)
 

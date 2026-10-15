@@ -83,15 +83,11 @@ def create_random_sequences(sequence_length: int, number_sequences: int, symbol_
     return sequences
 
 
-def create_graph_with_sentences(encoded_sequences: np.ndarray, words_coder: SentencesCoder,
-                                remove_diagonals=True,
-                                weighted_edges=True) -> (
-        SSAKG, np.ndarray):
+def create_graph_with_sentences(encoded_sequences: np.ndarray, words_coder: SentencesCoder) -> SSAKG:
     sequence_length = np.shape(encoded_sequences)[1]
     graph_dim = len(words_coder.word_codes)
 
-    ssakg = SSAKG(number_of_symbols=graph_dim, sequence_length=sequence_length,
-                  remove_diagonals=remove_diagonals, weighted_edges=weighted_edges)
+    ssakg = SSAKG(number_of_symbols=graph_dim, sequence_length=sequence_length)
 
     for i in range(len(encoded_sequences)):
         ssakg.insert_sequence(encoded_sequences[i])

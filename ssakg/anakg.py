@@ -10,7 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
+from typing import Tuple
 
 import numpy as np
 
@@ -21,29 +21,41 @@ import seaborn as sns
 
 import matplotlib.pyplot as plot
 
-from ssakg.anakg_view import GraphView, create_dir
+from ssakg.anakg_view import _GraphView
 from ssakg.sequence_translator import SequenceTranslator
-
-from tabulate import tabulate
 
 from ssakg.subgraph_patterns import SubgraphPatterns
 
 
 class ANAKG:
-    def __init__(self, graph_dim: int = 10, subgraph_dim: int = 5, dtype=np.uint16, graphs_to_drawing=False,
-                 remove_diagonals=True, weighted_edges=True):
+    def __init__(self, graph_dim: int = 10, subgraph_dim: int = 5, graphs_to_drawing=False, bit_based=False,
+                 dtype=None):
 
         # The parameter graphs_to_drawing is only for draw colorfully graph to examples.
         # Do not use it for other purposes.
 
         self.graph_dim = graph_dim
         self.subgraph_dim = subgraph_dim
-        self.dtype = dtype
+
+        self.bit_based = bit_based
 
         if subgraph_dim <= 16:
             self.translator_dtype = np.uint16
         else:
             self.translator_dtype = np.uint32
+
+        if dtype is None:
+            if self.bit_based:
+                if subgraph_dim <= 16:
+                    self.dtype = np.uint16
+                elif subgraph_dim <= 32:
+                    self.dtype = np.uint32
+                else:
+                    self.dtype = np.uint64
+            else:
+                self.dtype = np.uint16
+        else:
+            self.dtype = dtype
 
         if graph_dim > np.iinfo(np.uint16).max:
             self.translator_dtype = np.uint32
@@ -52,51 +64,129 @@ class ANAKG:
                                                       sequence_length=self.subgraph_dim,
                                                       dtype=self.translator_dtype)
 
-        self.subgraph_pattern = SubgraphPatterns.create_upper_triangular(self.subgraph_dim,
-                                                                         remove_diagonals=remove_diagonals,
-                                                                         weighted_edges=weighted_edges,
-                                                                         dtype=self.dtype)
+        if not bit_based:
+            self.subgraph_pattern = SubgraphPatterns.create_upper_triangular(self.subgraph_dim, dtype=self.dtype)
+        else:
+            self.subgraph_pattern = SubgraphPatterns.bits_square(self.subgraph_dim, dtype=self.dtype)
 
-        self.graph = self.crate_graph()
+        self.graph = self.__crate_graph()
         self.sequences = []
 
         self.graphs_to_drawing = graphs_to_drawing
+
+        if self.graphs_to_drawing and self.graph_dim > 15:
+            self.graphs_to_drawing = False
+            warnings.warn(
+                "Graph dimension must be less than 15. To visualise larger graphs, use the draw_density() function instead.")
+
+        # The parameter graph_matrices is only for draw colorfully graph to examples.
         self.graph_matrices = []
 
-    def set_subgraph_pattern(self, subgraph_pattern: np.array):
-        self.subgraph_pattern = subgraph_pattern
+    def show(self, to_print=False):
+        """Display the associative memory graph.
 
-    def crate_graph(self):
+        Parameters
+        ----------
+        to_print : bool, default=False
+            Whether to generate a higher-resolution graph suitable for printing.
+        """
+        if not self.graphs_to_drawing:
+            warnings.warn("Sequences are not stored. Graph view is empty.")
+            return
+
+        graph_view = self.__create_graph_view()
+        graph_view.draw(title=None, to_print=to_print)
+
+    def save_fig(self, title: Tuple[str, str] | None, output_dir: str = None, output_file: str = None, to_print=True):
+        """Save the associative memory graph to a file.
+
+        Parameters
+        ----------
+        title : tuple[str, str] or None
+            Optional figure title and caption.
+        output_dir : str or None, optional
+            Directory where the figure will be saved.
+        output_file : str or None, optional
+            Name of the output file.
+        to_print : bool, default=True
+            Whether to generate a higher-resolution figure suitable for printing.
+        """
+        if not self.graphs_to_drawing:
+            warnings.warn("Sequences are not stored. Graph view is empty.")
+
+        graph_view = self.__create_graph_view()
+        graph_view.draw(show=False, output_dir=output_dir, output_file=output_file, title=title, to_print=to_print)
+
+    def draw_density(self, title=None, x_label=None, y_label=None, circle_size: int = 2, bins="auto"):
+        """Plot the density distribution.
+
+        Parameters
+        ----------
+        title : str or None, optional
+            Title of the plot.
+        x_label : str or None, optional
+            Label for the x-axis.
+        y_label : str or None, optional
+            Label for the y-axis.
+        circle_size : int, default=2
+            Size of the circles used in the plot.
+        bins : str or int or sequence, default="auto"
+            Number of bins or binning strategy used to calculate the histogram.
+            The default value, "auto", automatically determines the bin edges.
+        """
+        dim = self.graph_dim
+
+        graph_1d = self.graph.reshape(dim * dim)
+
+        non_zeros = np.nonzero(graph_1d)[0]
+        x = np.mod(non_zeros, dim)
+        y = np.floor_divide(non_zeros, dim)
+        non_zeros_values = graph_1d[non_zeros]
+
+        dataframe = pd.DataFrame({"x": x, "y": y, "z": non_zeros_values})
+
+        if bins == "auto":
+            if dim > 1000:
+                dataframe = self.__rebin_dataframe(dataframe, n_bins=500, n_hue_bins=20)
+        elif type(bins) == int:
+            dataframe = self.__rebin_dataframe(dataframe, n_bins=int(bins), n_hue_bins=20)
+
+        palette = sns.color_palette("dark:#5A9_r", as_cmap=True)
+        joint_grid = sns.JointGrid(data=dataframe, x="x", y="y", hue="z", palette=palette)
+        joint_grid.plot_joint(sns.scatterplot, s=circle_size)
+        joint_grid.plot_marginals(sns.histplot, bins=min(int(dim / 2), 100))
+        joint_grid.ax_joint.legend().remove()
+
+        if title is not None:
+            joint_grid.figure.suptitle("ssakg - local density")
+
+        if x_label is not None:
+            joint_grid.ax_joint.set_xlabel(x_label)
+        else:
+            joint_grid.ax_joint.set_xlabel("")
+
+        if y_label is not None:
+            joint_grid.ax_joint.set_ylabel(y_label)
+        else:
+            joint_grid.ax_joint.set_ylabel("")
+
+        joint_grid.figure.tight_layout()
+
+        plot.show()
+
+    def __crate_graph(self):
         dim = self.graph_dim
 
         return np.zeros([dim, dim], dtype=self.dtype)
 
-    def add_subgraph(self, i: int, j: int):
-        subgraph = self.subgraph_pattern.copy()
-
-        temp_graph = np.zeros(self.graph.shape, dtype=self.dtype)
-        temp_graph[i:i + self.subgraph_dim, j:j + self.subgraph_dim] = subgraph
-        if self.graphs_to_drawing:
-            self.graph_matrices.append(temp_graph)
-
-        self.graph = self.graph + temp_graph
-
-    def add_random_subgraph(self):
-        rand_min = 0
-        rand_max = len(self.graph) - self.subgraph_dim + 1
-        i = np.random.randint(rand_min, rand_max)
-        j = np.random.randint(rand_min, rand_max)
-
-        self.add_subgraph(i, j)
-
-    def add_dim_to_graph(self, dim_to_add: int):
+    def __add_dim_to_graph(self, dim_to_add: int):
         self.graph_dim += dim_to_add
         self.graph = np.pad(self.graph, (0, dim_to_add), 'constant')
 
         for i in range(len(self.graph_matrices)):
             self.graph_matrices[i] = np.pad(self.graph_matrices[i], (0, dim_to_add), 'constant')
 
-    def sequence_to_subgraph(self, sequence: np.ndarray, use_temp_graph=True) -> np.ndarray:
+    def __sequence_to_subgraph(self, sequence: np.ndarray, use_temp_graph=True) -> np.ndarray:
         temp_graph = None
         if use_temp_graph:
             temp_graph = np.zeros(self.graph.shape, dtype=self.dtype)
@@ -106,11 +196,21 @@ class ANAKG:
                 if use_temp_graph:
                     temp_graph[sequence[i], sequence[j]] = self.subgraph_pattern[i, j]
                 else:
-                    self.graph[sequence[i], sequence[j]] += self.subgraph_pattern[i, j]
+                    if self.bit_based:
+                        self.graph[sequence[i], sequence[j]] = np.bitwise_or(self.graph[sequence[i], sequence[j]],
+                                                                             self.subgraph_pattern[i, j])
+                    else:
+                        self.graph[sequence[i], sequence[j]] += self.subgraph_pattern[i, j]
+
+        if use_temp_graph:
+            if self.bit_based:
+                self.graph = np.bitwise_or(self.graph, temp_graph)
+            else:
+                self.graph = self.graph + temp_graph
 
         return temp_graph
 
-    def reserve_symbol_names(self, sequences: np.ndarray) -> int:
+    def __reserve_symbol_names(self, sequences: np.ndarray) -> int:
         total_dims_to_add = 0
         for sequence in sequences:
             _, dims_to_add = self.sequence_translator.translate_sequence(sequence)
@@ -118,7 +218,7 @@ class ANAKG:
 
         return total_dims_to_add
 
-    def insert_sequence(self, sequence: np.ndarray) -> np.ndarray | None:
+    def _insert_sequence(self, sequence: np.ndarray) -> np.ndarray | None:
         if len(sequence) != self.subgraph_dim:
             warnings.warn(f"Sequence has incorrect length {len(sequence)}. Subgraph not inserted.")
             return None
@@ -126,29 +226,29 @@ class ANAKG:
         new_sequence, dims_to_add = self.sequence_translator.translate_sequence(sequence)
 
         if dims_to_add > 0:
-            self.add_dim_to_graph(dims_to_add)
+            self.__add_dim_to_graph(dims_to_add)
 
         self.sequences.append(new_sequence)
 
         if not self.graphs_to_drawing:
-            self.sequence_to_subgraph(new_sequence, use_temp_graph=False)
+            self.__sequence_to_subgraph(new_sequence, use_temp_graph=False)
         else:
-            temp_graph = self.sequence_to_subgraph(new_sequence, use_temp_graph=True)
+            temp_graph = self.__sequence_to_subgraph(new_sequence, use_temp_graph=True)
             self.graph_matrices.append(temp_graph)
-            self.graph = self.graph + temp_graph
 
         return new_sequence
 
-    def insert(self, sequences: np.ndarray):
+    def _insert(self, sequences: np.ndarray):
         if np.ndim(sequences) == 1:
-            return self.insert_sequence(sequences)
+            return self._insert_sequence(sequences)
         else:
-            dims_to_add = self.reserve_symbol_names(sequences)
+            dims_to_add = self.__reserve_symbol_names(sequences)
             if dims_to_add > 0:
-                self.add_dim_to_graph(dims_to_add)
+                self.__add_dim_to_graph(dims_to_add)
 
             for sequence in sequences:
-                self.insert_sequence(sequence)
+                self._insert_sequence(sequence)
+            return None
 
     def get_subgraph_from_sequence(self, sequence: np.ndarray) -> np.ndarray | None:
         if len(sequence) > self.subgraph_dim:
@@ -171,70 +271,39 @@ class ANAKG:
         for sequence in self.graph_matrices:
             sequences_size += sequence.nbytes
 
-        density = self.density()
+        density = self.__density()
 
         return (f"graph_size: {graph_size:.3f} GB\ngraph density: {density:.2f}\nstored sequences: "
                 f"{sequences_no}\nstored sequences size: {sequences_size}B\n")
 
-    def get_subgraph(self):
-        return self.subgraph_pattern
-
     def get_graph(self):
         return self.graph
 
-    def create_graph_view(self, to_print=False):
-        graph_view = GraphView()
-        graph_view.graph_from_matrix(np.zeros(self.graph.shape), color="gray", to_print=to_print)
+    def __create_graph_view(self):
+        graph_view = _GraphView()
+        graph_view.graph_from_matrix(np.zeros(self.graph.shape), color="gray")
 
         last_matrix = np.zeros(self.graph.shape, dtype=self.dtype)
 
         for graph_matrix in self.graph_matrices:
             last_matrix += graph_matrix
 
-        graph_view.graph_from_matrix(last_matrix, add_empty_nodes=False, color="orange", to_print=to_print)
+        graph_view.graph_from_matrix(last_matrix, add_empty_nodes=False, color="orange")
 
         return graph_view
 
-    def density(self) -> float:
+    def __density(self) -> float:
         n = self.graph_dim
         non_zeros = np.nonzero(self.graph)
         m = len(non_zeros[0])
 
         return m / n / (n - 1)
 
-    def show(self, to_print=False):
-        if not self.graphs_to_drawing:
-            warnings.warn("Sequences are not stored. Graph view is empty.")
-            return
-
-        graph_view = self.create_graph_view(to_print=to_print)
-        graph_view.draw(title=None, to_print=to_print)
-
-    def save_fig(self, title: (str, str), output_dir: str = None, output_file: str = None, to_print=True):
-        if not self.graphs_to_drawing:
-            warnings.warn("Sequences are not stored. Graph view is empty.")
-
-        graph_view = self.create_graph_view(to_print=to_print)
-        graph_view.draw(show=False, output_dir=output_dir, output_file=output_file, title=title, to_print=to_print)
-
-    def save_matrix(self, output_dir: str = None, output_file: str = None):
-        if not self.graphs_to_drawing:
-            warnings.warn("Sequences are not stored. Matrix is empty.")
-
-        if output_file is not None and output_dir is not None:
-            create_dir(output_dir)
-            file = open(os.path.join(output_dir, output_file), "w")
-            file.write(tabulate(self.graph, tablefmt="latex", floatfmt=".0f"))
-            file.close()
-
     def translate_sequence(self, sequence: np.ndarray):
         return self.sequence_translator.translate_sequence(sequence, add_to_dictionary=False)[0]
 
     def decode_sequence(self, sequence: np.ndarray):
         return self.sequence_translator.decode_sentence(sequence)
-
-    def check_context_correctness(self, context: np.ndarray):
-        pass
 
     def sequence_from_placeholders(self, sequence: list[str]) -> np.ndarray:
         return self.sequence_translator.sequence_from_placeholders(sequence)
@@ -243,14 +312,14 @@ class ANAKG:
         return self.sequence_translator.translate_sequence(context, add_to_dictionary=False)[0]
 
     def clear(self):
-        self.graph = self.crate_graph()
+        self.graph = self.__crate_graph()
         self.sequences = []
         self.sequence_translator = SequenceTranslator(no_unique_symbols=self.graph_dim,
                                                       sequence_length=self.subgraph_dim, dtype=self.dtype)
         self.graph_matrices = []
 
     @staticmethod
-    def rebin_dataframe(dataframe: pd.DataFrame, n_bins: int = 50, n_hue_bins=None) -> pd.DataFrame:
+    def __rebin_dataframe(dataframe: pd.DataFrame, n_bins: int = 50, n_hue_bins=None) -> pd.DataFrame:
         hist_2d, _, _ = np.histogram2d(dataframe['x'], dataframe['y'], weights=dataframe['z'], bins=n_bins)
         hue_values = hist_2d.T.flatten()
 
@@ -263,44 +332,3 @@ class ANAKG:
 
         return pd.DataFrame({'x': x.flatten()[no_zeros_elements], 'y': y.flatten()[no_zeros_elements],
                              'z': hue_values[no_zeros_elements]})
-
-    def draw_density(self, title=None, x_label=None, y_label=None, circle_size: int = 2, bins="auto"):
-        dim = self.graph_dim
-
-        graph_1d = self.graph.reshape(dim * dim)
-
-        non_zeros = np.nonzero(graph_1d)[0]
-        x = np.mod(non_zeros, dim)
-        y = np.floor_divide(non_zeros, dim)
-        non_zeros_values = graph_1d[non_zeros]
-
-        dataframe = pd.DataFrame({"x": x, "y": y, "z": non_zeros_values})
-
-        if bins == "auto":
-            if dim > 1000:
-                dataframe = self.rebin_dataframe(dataframe, n_bins=500, n_hue_bins=20)
-        elif type(bins)==int:
-            dataframe = self.rebin_dataframe(dataframe, n_bins=int(bins), n_hue_bins=20)
-
-        palette = sns.color_palette("dark:#5A9_r", as_cmap=True)
-        joint_grid = sns.JointGrid(data=dataframe, x="x", y="y", hue="z", palette=palette)
-        joint_grid.plot_joint(sns.scatterplot, s=circle_size)
-        joint_grid.plot_marginals(sns.histplot, bins=min(int(dim / 2), 100))
-        joint_grid.ax_joint.legend().remove()
-
-        if title is not None:
-            joint_grid.fig.suptitle("ssakg - local density")
-
-        if x_label is not None:
-            joint_grid.ax_joint.set_xlabel(x_label)
-        else:
-            joint_grid.ax_joint.set_xlabel("")
-
-        if y_label is not None:
-            joint_grid.ax_joint.set_ylabel(y_label)
-        else:
-            joint_grid.ax_joint.set_ylabel("")
-
-        joint_grid.fig.tight_layout()
-
-        plot.show()

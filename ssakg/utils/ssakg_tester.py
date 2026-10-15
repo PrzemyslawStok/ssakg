@@ -21,7 +21,7 @@ import time
 from pyprind import ProgBar
 
 from ssakg.ordering_algorithms import SimpleSort, NodeOrderingAlgorithm, EnhancedNodeOrderingAlgorithm, \
-    WeightedEdgesNodeOrderingAlgorithm, OrderingAlgorithm
+    WeightedEdgesNodeOrderingAlgorithm, OrderingAlgorithm, BitBasedSort, BitBasedSortDummy
 from ssakg.ssakg import SSAKG
 
 
@@ -36,71 +36,35 @@ class SSAKG_Tester:
         self.x_label = "Number of correct elements in sequence"
         self.y_label = "Number of sequences"
         self.algorithms_list = algorithms_list
+        # SSAKG 2.0 extension has built in sort method (called bits sort)
+        self.bit_based = ssakg.bit_based
         self.unsorted_elements_test = [0, 0]
-        self.elapsed_time = 0
+        self.unsorted_percentage = 0
+        self.test_time = 0
         if algorithms_list is None:
             self.algorithms_list = [SimpleSort(), NodeOrderingAlgorithm(),
                                     EnhancedNodeOrderingAlgorithm(),
                                     WeightedEdgesNodeOrderingAlgorithm()]
+        if self.bit_based:
+            self.algorithms_list = [BitBasedSort()]
 
-    def add_algorithm(self, name: str):
-        histogram = np.zeros(self.sequence_length + 1, dtype=np.int16)
-        corrections = 0
-        all_values = 0
-        self.algorithms_test[name] = [histogram, corrections, all_values]
+    def make_test(self, context_length, show_progress=False, ordering_test=True) -> float:
+        """Evaluate memory retrieval performance.
 
-    def ordering_test(self, translated_sequence, context_sequence):
-        use_only_first_path = True
-        for algorithm in self.algorithms_list:
-            sorted_sequence, _ = self.ssakg.order_sequence(context_sequence, algorithm,
-                                                           use_only_first_path)
-            result, agreement = SSAKG.compare_sorted_sequences(translated_sequence, sorted_sequence)
-            self.add_values(agreement, str(algorithm))
-
-    def add_value(self, algorithm_name: str, agreement: np.ndarray):
-        no_result = np.sum(agreement)
-        histogram = self.algorithms_test[algorithm_name][0]
-
-        histogram[no_result] += 1
-
-        if no_result >= self.sequence_length:
-            self.algorithms_test[algorithm_name][1] += 1
-
-        self.algorithms_test[algorithm_name][2] += 1
-
-    def add_values(self, agreement: np.ndarray, name: str):
-        if name in self.algorithms_test:
-            self.add_value(name, agreement)
-        else:
-            self.add_algorithm(name)
-            self.add_value(name, agreement)
-
-    def clear(self):
-        self.algorithms_test = {}
-        self.unsorted_elements_test = [0, 0]
-
-    def _translate_sequence(self, sequence: np.ndarray) -> np.ndarray:
-        return self.ssakg.translate_sequence(sequence)
-
-    def _create_context(self, sequence: np.ndarray, context_length: int) -> np.ndarray:
-        translated_sequence = self._translate_sequence(sequence)
-        context = SSAKG.context_from_sequence(context_length, translated_sequence)
-
-        return context
-
-    def _sequence_to_compare_elements(self, sequence: np.ndarray) -> np.ndarray:
-        return self._translate_sequence(sequence)
-
-    def _sequence_to_ordering_test(self, sequence: np.ndarray) -> np.ndarray:
-        return self._translate_sequence(sequence)
-
-    def _sequence_with_unsorted_elements(self, sequence: np.ndarray) -> np.ndarray:
-        return sequence
-
-    def make_test(self, context_length, show_progress=False):
+        Parameters
+        ----------
+        context_length : int
+            Length of the context used during testing.
+        show_progress : bool, default=False
+            Whether to display a progress bar during testing.
+        ordering_test : bool, default=True
+            The correct order of a sequence is determined by various algorithms, which are tested in this process
+        Returns
+        -------
+        float
+            Test performance percentage for unordered sequences.
+        """
         self.clear()
-
-        start_time = time.time()
         self.context_length = context_length
 
         if context_length > self.sequence_length:
@@ -111,49 +75,48 @@ class SSAKG_Tester:
         else:
             bar = None
 
+        start_time = time.perf_counter()
+
         # The context may contain recurring elements. Symbols assigned to such elements are assigned dynamically.
         # To obtain a context with recurring elements,
         # the simplest way is to translate the entire sequence and choose the desired context.
 
         for i in range(len(self.sequences)):
             context = self._create_context(self.sequences[i], context_length)
-            # Now we have correct context in a direct way. We can read unsorted elements from ssakg.
+            # Now we have the correct context directly. We can read unsorted elements from ssakg.
             # Context is currently translated
-            unsorted_sequence, _ = self.ssakg.get_unsorted_elements(context, context_is_translated=True)
+            sequence_elements = self.ssakg.get_sequence_elements(context, context_is_translated=True)
 
             if SSAKG.compare_sets_of_elements(self._sequence_to_compare_elements(self.sequences[i]),
-                                              self._sequence_with_unsorted_elements(unsorted_sequence)):
+                                              self._sequence_with_unsorted_elements(sequence_elements)):
                 self.unsorted_elements_test[0] += 1
-                self.ordering_test(self._sequence_to_ordering_test(self.sequences[i]), unsorted_sequence)
+
+                if ordering_test:
+                    self.__ordering_test(self._sequence_to_ordering_test(self.sequences[i]), sequence_elements)
             else:
                 self.unsorted_elements_test[1] += 1
 
             if bar is not None:
                 bar.update()
 
-        self.elapsed_time = time.time() - start_time
+        self.unsorted_percentage = (self.unsorted_elements_test[0] /
+                                    (self.unsorted_elements_test[0] + self.unsorted_elements_test[1]) * 100)
 
-    def create_agreements_dataframe(self) -> pd.DataFrame:
-        correctly_reproduced_elements = []
-        correct_no = []
-        algorithms_name = []
+        self.test_time = time.perf_counter() - start_time
 
-        for algorithm_name, values_set in self.algorithms_test.items():
-            for i, value in enumerate(values_set[0]):
-                correctly_reproduced_elements.append(i)
-                correct_no.append(value)
-                algorithms_name.append(algorithm_name)
-
-        dataframe = pd.DataFrame(
-            {"Correctly_reproduced_elements": correctly_reproduced_elements, "Correct_no": correct_no,
-             "algorithm": algorithms_name})
-
-        return dataframe
+        return self.unsorted_percentage
 
     def plot_agreement_histogram(self, draw_text: bool = True):
+        """Plot the agreement histogram for sequence ordering tests.
+
+        Parameters
+        ----------
+        draw_text : bool, default=True
+            Whether to display text labels on the histogram.
+        """
         self.title = f"\n Comparison of algorithms \n Sequence length {self.sequence_length}, context length {self.context_length}"
 
-        dataframe = self.create_agreements_dataframe()
+        dataframe = self.__create_agreements_dataframe()
 
         fig, ax = plot.subplots()
 
@@ -175,7 +138,85 @@ class SSAKG_Tester:
 
         plot.show()
 
-    def create_dataframe(self):
+    def __add_algorithm(self, name: str):
+        histogram = np.zeros(self.sequence_length + 1, dtype=np.int16)
+        corrections = 0
+        all_values = 0
+        self.algorithms_test[name] = [histogram, corrections, all_values]
+
+    def __ordering_test(self, translated_sequence, context_sequence):
+        use_only_first_path = True
+
+        for algorithm in self.algorithms_list:
+            if self.bit_based:
+                # The bit-based algorithm have built-in sort function.
+                sorted_sequence, _ = self.ssakg.order_sequence(context_sequence, algorithm,
+                                                               use_only_first_path)
+            else:
+                sorted_sequence, _ = self.ssakg.order_sequence(context_sequence, algorithm, use_only_first_path)
+
+            result, agreement = SSAKG.compare_sorted_sequences(translated_sequence, sorted_sequence)
+            self.__add_values(agreement, str(algorithm))
+
+    def __add_value(self, algorithm_name: str, agreement: np.ndarray):
+        no_result = np.sum(agreement)
+        histogram = self.algorithms_test[algorithm_name][0]
+
+        histogram[no_result] += 1
+
+        if no_result >= self.sequence_length:
+            self.algorithms_test[algorithm_name][1] += 1
+
+        self.algorithms_test[algorithm_name][2] += 1
+
+    def __add_values(self, agreement: np.ndarray, name: str):
+        if name in self.algorithms_test:
+            self.__add_value(name, agreement)
+        else:
+            self.__add_algorithm(name)
+            self.__add_value(name, agreement)
+
+    def clear(self):
+        self.algorithms_test = {}
+        self.unsorted_elements_test = [0, 0]
+        self.unsorted_percentage = 0
+
+    def _translate_sequence(self, sequence: np.ndarray) -> np.ndarray:
+        return self.ssakg.translate_sequence(sequence)
+
+    def _create_context(self, sequence: np.ndarray, context_length: int) -> np.ndarray:
+        translated_sequence = self._translate_sequence(sequence)
+        context = SSAKG.context_from_sequence(context_length, translated_sequence)
+
+        return context
+
+    def _sequence_to_compare_elements(self, sequence: np.ndarray) -> np.ndarray:
+        return self._translate_sequence(sequence)
+
+    def _sequence_to_ordering_test(self, sequence: np.ndarray) -> np.ndarray:
+        return self._translate_sequence(sequence)
+
+    def _sequence_with_unsorted_elements(self, sequence: np.ndarray) -> np.ndarray:
+        return sequence
+
+    def __create_agreements_dataframe(self) -> pd.DataFrame:
+        correctly_reproduced_elements = []
+        correct_no = []
+        algorithms_name = []
+
+        for algorithm_name, values_set in self.algorithms_test.items():
+            for i, value in enumerate(values_set[0]):
+                correctly_reproduced_elements.append(i)
+                correct_no.append(value)
+                algorithms_name.append(algorithm_name)
+
+        dataframe = pd.DataFrame(
+            {"Correctly_reproduced_elements": correctly_reproduced_elements, "Correct_no": correct_no,
+             "algorithm": algorithms_name})
+
+        return dataframe
+
+    def __create_dataframe(self):
         data = {}
         headers = []
 
@@ -207,8 +248,28 @@ class SSAKG_Tester:
 
         return df
 
+    def get_agreement_percentage(self):
+        agreements = []
+        for _, values_set in self.algorithms_test.items():
+            correct_sort = values_set[1]
+            all_values = values_set[2]
+            if all_values > 0:
+                agreements.append(correct_sort / all_values * 100)
+        return agreements
+
+    def get_sorted_percentage(self):
+        if len(self.get_agreement_percentage()) == 0:
+            return 0
+        return max(self.get_agreement_percentage()) / 100 * self.unsorted_percentage
+
+    def get_unsorted_percentage(self):
+        return self.unsorted_percentage
+
+    def get_test_time(self):
+        return self.test_time
+
     def print_dataframe(self):
-        df = self.create_dataframe()
+        df = self.__create_dataframe()
         print(df.to_string(formatters={"correct sort percentage": "{:2,.2f}%".format}))
 
     def __str__(self):
@@ -217,11 +278,10 @@ class SSAKG_Tester:
         algorithm_info += f"ssakg dimension: {len(graph_matrix)}\n"
         algorithm_info += f"sequence length: {self.sequence_length}\n"
         algorithm_info += f"context length: {self.context_length}\n"
-        algorithm_info += f"elapsed time:{self.elapsed_time: .2f}s\n"
-        unsorted_percentage = (self.unsorted_elements_test[0] /
-                               (self.unsorted_elements_test[0] + self.unsorted_elements_test[1]) * 100)
-        algorithm_info += f"unordered sequences restored: {unsorted_percentage:.2f}%\n"
-        df = self.create_dataframe()
+        algorithm_info += f"unordered sequences restored: {self.unsorted_percentage:.2f}%\n"
+        algorithm_info += f"ordered sequences restored: {self.get_sorted_percentage():.2f}%\n"
+        algorithm_info += f"elapsed time: {self.test_time:.6f}s\n"
+        df = self.__create_dataframe()
         algorithm_info += df.to_string(formatters={"correct sort percentage": "{:2,.2f}%".format})
 
         return algorithm_info

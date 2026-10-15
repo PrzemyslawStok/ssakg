@@ -1,3 +1,5 @@
+from typing import Any
+
 import numpy as np
 
 
@@ -46,7 +48,7 @@ class MicroRNAEncoder:
 
         return np.array(encoded_sequence)
 
-    def __encode_sequences(self, sequences_to_encode: np.ndarray, encode_function: any = None, max_sequence_length=None
+    def __encode_sequences(self, sequences_to_encode: np.ndarray, encode_function: Any = None, max_sequence_length=None
                            ) -> np.ndarray:
         sequences_lengths = []
 
