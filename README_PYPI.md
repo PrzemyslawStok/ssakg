@@ -35,6 +35,8 @@ Examples of the use of the program:
 [Reading sequences](https://github.com/PrzemyslawStok/ssakg/blob/main/examples/ssakg_reading.ipynb)  
 [SSAKG memory](https://github.com/PrzemyslawStok/ssakg/blob/main/examples/ssakg_tests.ipynb)  
 
+[Bit-based example](https://github.com/PrzemyslawStok/ssakg/blob/main/examples/bit_based_example.ipynb)
+
 [miRNA example](https://github.com/PrzemyslawStok/ssakg/blob/main/microrna/mirna_example.ipynb)
 
 ## License

@@ -35,7 +35,7 @@ Examples of the use of the program:
 [Reading sequences](examples/ssakg_reading.ipynb)  
 [SSAKG memory](examples/ssakg_tests.ipynb)  
 
-[bit-based example](examples/bit_based_example.ipynb)
+[Bit-based example](examples/bit_based_example.ipynb)
 
 [miRNA example](microrna/mirna_example.ipynb)
 
