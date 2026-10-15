@@ -54,7 +54,7 @@ def table_symbols_sequences(symbols_list: list[int], number_of_sequences_list: l
     # noinspection PyTypeChecker
     formated_table = dataframe.style.format("{:.2g}%").format("{:.2g}s",
                                                               subset=(pd.IndexSlice[:, ["elapsed"]],
-                                                                      dataframe.columns)).set_caption(caption)
+                                                                      dataframe.columns))
 
     return dataframe, caption, formated_table
 
@@ -96,7 +96,7 @@ def table_various_context(no_symbols: int, number_of_sequences_list: list[int], 
             data_table[2 * i + 1, j] = 100 - ssakg_tester_bits.make_test(context_length=length,
                                                                          show_progress=show_progress)
 
-    caption = f"Scene recognition error in \\% for various dataset and context sizes for sequence length {sequence_length}, number of symbols {no_symbols}."
+    caption = f"Scene recognition error for various dataset and context sizes for sequence length {sequence_length}, number of symbols {no_symbols}."
     return pd.DataFrame(data_table, index=index, columns=dataframe_columns), caption
 
 
