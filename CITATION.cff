@@ -8,6 +8,20 @@ version: "2.0.0"
 
 url: "https://github.com/PrzemyslawStok/ssakg"
 
+keywords:
+  - associative memory
+  - knowledge graph
+  - sequence storage
+  - python
+
+authors:
+  - family-names: "Stokłosa"
+    given-names: "Przemysław"
+  - family-names: "Starzyk"
+    given-names: "Janusz A."
+  - family-names: "Raif"
+    given-names: "Paweł"
+
 preferred-citation:
   type: article
   title: "Associative knowledge graphs for efficient sequence storage and retrieval"
